@@ -1,0 +1,299 @@
+.flipnzee-auction-card {
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #ffffff;
+	padding: 20px;
+	margin-bottom: 30px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.flipnzee-view-listing-button {
+	display: inline-block;
+	padding: 10px 18px;
+	background: #0073aa;
+	color: #ffffff;
+	text-decoration: none;
+	border-radius: 4px;
+	font-weight: 600;
+	transition: background 0.3s ease;
+}
+
+.flipnzee-view-listing-button:hover {
+	background: #005177;
+	color: #ffffff;
+}
+
+.flipnzee-auction-thumbnail img {
+	width: 100%;
+	height: auto;
+	display: block;
+	border-radius: 6px;
+}
+
+/* Auction Meta */
+
+/* Auction Meta */
+
+.flipnzee-auction-meta {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 20px 0;
+}
+
+.flipnzee-auction-meta th,
+.flipnzee-auction-meta td {
+	padding: 10px 0;
+	border-bottom: 1px solid #eeeeee;
+}
+
+.flipnzee-auction-meta th {
+	text-align: left;
+	font-weight: 600;
+	width: 45%;
+}
+
+.flipnzee-auction-meta td {
+	text-align: right;
+}
+
+/* ---------------------------------------
+   Verified Analytics Summary
+---------------------------------------- */
+
+.flipnzee-analytics-summary {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8fbff;
+    border: 1px solid #dbe9f6;
+    border-radius: 8px;
+}
+
+.flipnzee-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    background: #1d4ed8;
+    color: #ffffff;
+
+    padding: 8px 14px;
+
+    border-radius: 999px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    margin-bottom: 14px;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
+
+.flipnzee-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #ececec;
+}
+
+.flipnzee-stat:last-child {
+    border-bottom: none;
+}
+
+.flipnzee-stat strong {
+    font-size: 18px;
+    color: #005177;
+}
+.flipnzee-analytics-summary {
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.flipnzee-verified {
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-bottom: 12px;
+}
+
+.flipnzee-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.flipnzee-stat:last-child {
+    border-bottom: none;
+}
+
+.flipnzee-stat strong {
+    font-size: 18px;
+    color: #111827;
+}
+.flipnzee-countdown {
+    font-weight: 600;
+    color: #1d4ed8;
+}
+
+.flipnzee-countdown.ended {
+    color: #dc2626;
+}
+
+.flipnzee-countdown {
+    font-weight: 600;
+    color: #1d4ed8;
+}
+
+.flipnzee-countdown.ended {
+    color: #dc2626;
+    font-weight: 700;
+}
+/* ----------------------------------------
+   Auction Status Badge
+---------------------------------------- */
+
+.flipnzee-auction-status {
+    display: inline-block;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+
+    border-radius: 999px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #fff;
+}
+
+/* Live */
+
+.flipnzee-status-live {
+    background: #16a34a;
+}
+
+/* Ending Soon */
+
+.flipnzee-status-ending {
+    background: #f59e0b;
+    color: #111827;
+}
+
+/* Ended */
+
+.flipnzee-status-ended {
+    background: #dc2626;
+}
+.flipnzee-bid-history {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.flipnzee-bid-history th,
+.flipnzee-bid-history td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap;
+}
+
+.flipnzee-bid-history th {
+    text-align: left;
+    background: #f5f5f5;
+}
+
+.flipnzee-bid-status {
+	margin: 15px 0;
+	padding: 12px;
+	border-radius: 6px;
+	font-weight: 600;
+	text-align: center;
+}
+
+.flipnzee-winning {
+	background: #e8f7e8;
+	color: #0a6d0a;
+	border: 1px solid #4caf50;
+}
+
+.flipnzee-outbid {
+	background: #fff3e0;
+	color: #c05a00;
+	border: 1px solid #ff9800;
+}
+
+.flipnzee-bid-status {
+    margin: 15px 0;
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.flipnzee-winning {
+    background: #e9f8ef;
+    color: #0b6b35;
+    border-left: 4px solid #2ecc71;
+}
+
+.flipnzee-outbid {
+    background: #fff3f3;
+    color: #b30000;
+    border-left: 4px solid #e74c3c;
+}
+/*
+ * Bid notices.
+ */
+.flipnzee-notice {
+
+    padding: 15px;
+
+    margin: 20px 0;
+
+    border-radius: 6px;
+
+    font-weight: 600;
+
+}
+
+.flipnzee-success {
+
+    background: #ecfdf3;
+
+    color: #046c4e;
+
+    border-left: 5px solid #10b981;
+
+}
+
+.flipnzee-error {
+
+    background: #fef2f2;
+
+    color: #b91c1c;
+
+    border-left: 5px solid #ef4444;
+
+}
+
+/*
+ * Auction closed notice.
+ */
+.flipnzee-auction-closed {
+
+	padding: 16px;
+
+	margin: 20px 0;
+
+	border-radius: 6px;
+
+	background: #fff3cd;
+
+	color: #856404;
+
+	border-left: 5px solid #ffc107;
+
+	font-weight: 600;
+
+}
