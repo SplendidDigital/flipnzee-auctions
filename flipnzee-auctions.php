@@ -39,6 +39,12 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-database.php' ) ) {
 }
 
 /**
+ * Load Activity Log Class
+ */
+if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-activity-log.php' ) ) {
+	require_once FLIPNZEE_AUCTION_PATH . 'includes/class-activity-log.php';
+}
+/**
  * Load Auction Manager
  */
 if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-auction-manager.php' ) ) {
@@ -61,6 +67,12 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-shortcodes.php' ) ) {
 	require_once FLIPNZEE_AUCTION_PATH . 'includes/class-shortcodes.php';
 }
 
+/**
+ * Load Admin Activity Log
+ */
+if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-admin-activity-log.php' ) ) {
+	require_once FLIPNZEE_AUCTION_PATH . 'admin/class-admin-activity-log.php';
+}
 
 /**
  * Load Admin Class
@@ -83,9 +95,20 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-auctions-table.php' ) ) {
 	require_once FLIPNZEE_AUCTION_PATH . 'admin/class-auctions-table.php';
 }
 
-/**
+require_once FLIPNZEE_AUCTION_PATH .
+	'includes/class-transaction-manager.php';
+
+	/**
  * Plugin Activation
  */
+require_once FLIPNZEE_AUCTION_PATH .
+	'admin/class-transactions-table.php';
+require_once FLIPNZEE_AUCTION_PATH .
+	'admin/class-admin-transactions.php';
+
+require_once FLIPNZEE_AUCTION_PATH .
+	'admin/class-admin-transaction-details.php';
+	
 function flipnzee_auction_activate() {
 
     Flipnzee_Auction_Database::create_tables();
@@ -159,4 +182,15 @@ add_action(
 	'wp_enqueue_scripts',
 	'flipnzee_auction_enqueue_styles'
 );
+/**
+ * Handle transaction status updates.
+ */
+add_action(
+	'admin_post_flipnzee_update_transaction_status',
+	array(
+		'Flipnzee_Transaction_Manager',
+		'handle_status_update',
+	)
+);
 new Flipnzee_Shortcodes();
+new Flipnzee_Transaction_Manager();

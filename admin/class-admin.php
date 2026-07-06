@@ -37,35 +37,67 @@ class Flipnzee_Auction_Admin {
 			26
 		);
 
-		add_submenu_page(
-			'flipnzee-auctions',
-			'Add Auction',
-			'Add Auction',
-			'manage_options',
-			'flipnzee-add-auction',
-			array( $this, 'add_auction_page' )
-		);
+add_submenu_page(
+	'flipnzee-auctions',
+	'Add Auction',
+	'Add Auction',
+	'manage_options',
+	'flipnzee-add-auction',
+	array( $this, 'add_auction_page' )
+);
 
-		add_submenu_page(
-			'flipnzee-auctions',
-			'All Auctions',
-			'All Auctions',
-			'manage_options',
-			'flipnzee-all-auctions',
-			array( $this, 'all_auctions_page' )
-		);
+add_submenu_page(
+	'flipnzee-auctions',
+	'Activity Log',
+	'Activity Log',
+	'manage_options',
+	'flipnzee-activity-log',
+	array( $this, 'activity_log_page' )
+);
 
-		add_submenu_page(
-			'flipnzee-auctions',
-			'Edit Auction',
-			'Edit Auction',
-			'manage_options',
-			'flipnzee-edit-auction',
-			array( $this, 'edit_auction_page' )
-		);
-	}
+add_submenu_page(
+    'flipnzee-auctions',
+    'Transactions',
+    'Transactions',
+    'manage_options',
+    'flipnzee-transactions',
+    array(
+        'Flipnzee_Admin_Transactions',
+        'render_page',
+    )
+);
 
-	/**
+add_submenu_page(
+	null,
+	'Transaction Details',
+	'Transaction Details',
+	'manage_options',
+	'flipnzee-transaction-details',
+	array(
+		'Flipnzee_Admin_Transaction_Details',
+		'render_page',
+	)
+);
+
+add_submenu_page(
+	'flipnzee-auctions',
+	'All Auctions',
+	'All Auctions',
+	'manage_options',
+	'flipnzee-all-auctions',
+	array( $this, 'all_auctions_page' )
+);
+
+add_submenu_page(
+	'flipnzee-auctions',
+	'Edit Auction',
+	'Edit Auction',
+	'manage_options',
+	'flipnzee-edit-auction',
+	array( $this, 'edit_auction_page' )
+);
+
+} 	/**
 	 * Dashboard page.
 	 */
 	public function dashboard_page() {
@@ -711,6 +743,15 @@ public function process_bulk_actions() {
 	);
 
 	exit;
+}
+/**
+ * Activity Log page.
+ *
+ * @return void
+ */
+public function activity_log_page() {
+
+	Flipnzee_Admin_Activity_Log::render();
 }
 }
 

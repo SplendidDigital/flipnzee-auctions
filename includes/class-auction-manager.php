@@ -170,14 +170,89 @@ public static function update_auction(
 
     return false !== $result;
 }
-		/**
-	 * Delete an auction.
-	 *
-	 * @param int $auction_id Auction ID.
-	 *
-	 * @return bool
-	 */
-	public static function delete_auction( $auction_id ) {
+
+/**
+ * Automatically close expired active auctions.
+ *
+ * Updates any auction that is still marked as active
+ * but whose end date/time has already passed.
+ *
+ * @return int Number of auctions updated.
+ */
+public static function update_expired_auctions() {
+
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'flipnzee_auctions';
+	$expired_auctions = $wpdb->get_col(
+	$wpdb->prepare(
+		"SELECT id
+		FROM {$table}
+		WHERE status = %s
+		AND auction_end < %s",
+		'active',
+		current_time( 'mysql' )
+	)
+);
+
+	$result = $wpdb->query(
+		$wpdb->prepare(
+			"UPDATE {$table}
+			SET status = %s
+			WHERE status = %s
+			AND auction_end < %s",
+			'closed',
+			'active',
+			current_time( 'mysql' )
+		)
+	);
+
+	$updated_count = ( false === $result ) ? 0 : (int) $result;
+if ( $updated_count > 0 ) {
+
+	Flipnzee_Activity_Log::log(
+		'auction_auto_closed',
+		0,
+		0,
+		sprintf(
+			'%d auction(s) automatically closed.',
+			$updated_count
+		)
+	);
+	foreach ( $expired_auctions as $auction_id ) {
+
+	Flipnzee_Bid_Manager::determine_winner(
+		(int) $auction_id
+	);
+
+}
+}
+/**
+ * Fires after expired auctions have been processed.
+ *
+ * This action allows Flipnzee Analytics and other plugins
+ * to respond after automatic auction lifecycle processing
+ * has completed.
+ *
+ * Typical uses include:
+ * - Refresh marketplace statistics.
+ * - Send winner or seller notifications.
+ * - Record activity logs.
+ * - Clear caches.
+ * - Trigger third-party integrations.
+ *
+ * @since 1.0.0
+ *
+ * @param int $updated_count Number of auctions automatically closed.
+ */
+do_action(
+    'flipnzee_auctions_expired_processed',
+    $updated_count
+);
+
+return $updated_count;
+}
+		public static function delete_auction( $auction_id ) {
 
 		global $wpdb;
 
@@ -506,7 +581,7 @@ public static function run_scheduled_maintenance() {
 
 	self::activate_scheduled_auctions();
 
-	self::close_expired_auctions();
+	self::update_expired_auctions();
 }
 /**
  * Get active auctions.
@@ -514,6 +589,7 @@ public static function run_scheduled_maintenance() {
  * @return array
  */
 public static function get_active_auctions() {
+	self::update_expired_auctions();
 
 	global $wpdb;
 

@@ -256,4 +256,103 @@ public static function get_highest_bidder( $auction_id ) {
 		)
 	);
 }
+
+/**
+ * Get the winning bid.
+ *
+ * @param int $auction_id Auction ID.
+ * @return object|null
+ */
+public static function get_winning_bid( $auction_id ) {
+
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'flipnzee_bids';
+	$users = $wpdb->users;
+
+	return $wpdb->get_row(
+		$wpdb->prepare(
+			"
+			SELECT
+				b.bid_amount,
+				b.bidder_id,
+				u.display_name
+			FROM {$table} b
+			LEFT JOIN {$users} u
+				ON b.bidder_id = u.ID
+			WHERE b.auction_id = %d
+			ORDER BY b.bid_amount DESC
+			LIMIT 1
+			",
+			$auction_id
+		)
+	);
+}
+/**
+ * Determine the winning bidder for an auction.
+ *
+ * @param int $auction_id Auction ID.
+ * @return bool
+ */
+public static function determine_winner( $auction_id ) {
+
+	global $wpdb;
+
+	$bid_table = $wpdb->prefix . 'flipnzee_bids';
+	$auction_table = $wpdb->prefix . 'flipnzee_auctions';
+
+	$winner = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT bidder_id, bid_amount
+			FROM {$bid_table}
+			WHERE auction_id = %d
+			ORDER BY bid_amount DESC, created_at ASC
+			LIMIT 1",
+			$auction_id
+		)
+	);
+
+	if ( ! $winner ) {
+		return false;
+	}
+
+	$wpdb->update(
+		$auction_table,
+		array(
+			'winner_user_id' => $winner->bidder_id,
+			'current_bid'    => $winner->bid_amount,
+		),
+		array(
+			'id' => $auction_id,
+		),
+		array(
+			'%d',
+			'%f',
+		),
+		array(
+			'%d',
+		)
+	);
+
+	if ( class_exists( 'Flipnzee_Activity_Log' ) ) {
+
+		Flipnzee_Activity_Log::log(
+			'winner_determined',
+			$auction_id,
+			$winner->bidder_id,
+			sprintf(
+				'Winning bid: %s',
+				$winner->bid_amount
+			)
+		);
+	}
+	do_action(
+	'flipnzee_auction_winner_determined',
+	$auction_id,
+	$winner
+);
+
+	return true;
+}
+
 }

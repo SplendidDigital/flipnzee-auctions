@@ -34,7 +34,7 @@ class Flipnzee_Shortcodes {
  * @return string
  */
 public function auctions_shortcode() {
-
+    
 	$auctions = Flipnzee_Auction_Manager::get_active_auctions();
 
 	if ( empty( $auctions ) ) {
@@ -57,22 +57,27 @@ if ( ! $listing ) {
 	continue;
 }
 $current_time = current_time( 'timestamp' );
-$end_time     = strtotime( $auction['auction_end'] );
+$end_time = strtotime( $auction['auction_end'] );
 
-if ( $end_time <= $current_time ) {
+if ( 'closed' === $auction['status'] ) {
 
-    $status       = 'ended';
-    $status_label = '🔴 Auction Ended';
+    $status = 'ended';
+    $status_label = 'Auction Ended';
+
+} elseif ( $end_time <= $current_time ) {
+
+    $status = 'ended';
+    $status_label = 'Auction Ended';
 
 } elseif ( ( $end_time - $current_time ) <= DAY_IN_SECONDS ) {
 
-    $status       = 'ending';
-    $status_label = '🟡 Ending Soon';
+    $status = 'ending';
+    $status_label = 'Ending Soon';
 
 } else {
 
-    $status       = 'live';
-    $status_label = '🟢 Live Auction';
+    $status = 'live';
+    $status_label = 'Live Auction';
 
 }
 ?>
@@ -118,12 +123,24 @@ $highest_bidder = Flipnzee_Bid_Manager::get_highest_bidder(
     $auction['id']
 );
 
+
+$winning_bid = Flipnzee_Bid_Manager::get_winning_bid(
+    $auction['id']
+);
+
+
 /*
  * Check whether auction has expired.
  */
 $auction_closed =
-	current_time( 'timestamp' ) >=
-	strtotime( $auction['auction_end'] );
+    (
+        'closed' === $auction['status']
+    )
+    ||
+    (
+        current_time( 'timestamp' ) >=
+        strtotime( $auction['auction_end'] )
+    );
 
 
 
@@ -224,7 +241,16 @@ if ( isset( $_GET['bid'] ) ) {
 		<td><?php echo esc_html( '$' . number_format_i18n( $auction['buy_now_price'], 0 ) ); ?></td>
 	</tr>
 
-	<tr>
+	<?php if ( 'closed' === $auction['status'] ) : ?>
+
+<tr>
+    <th>Auction Status</th>
+    <td>Auction Ended</td>
+</tr>
+
+<?php else : ?>
+
+<tr>
     <th>Auction Ends In</th>
     <td
         class="flipnzee-countdown"
@@ -233,6 +259,8 @@ if ( isset( $_GET['bid'] ) ) {
         Loading...
     </td>
 </tr>
+
+<?php endif; ?>
 
 </table>
 
@@ -334,8 +362,36 @@ if ( isset( $_GET['bid'] ) ) {
 <?php if ( $auction_closed ) : ?>
 
 <div class="flipnzee-auction-closed">
-	🏁 <strong>Auction Closed</strong><br>
-	This auction has ended. No further bids are accepted.
+
+    <?php if ( $winning_bid ) : ?>
+
+    <p>
+        🏆 <strong>Winner:</strong>
+        <?php echo esc_html( $winning_bid->display_name ); ?>
+    </p>
+        <p>
+            💰 <strong>Winning Bid:</strong>
+            <?php
+            echo esc_html(
+                '$' . number_format_i18n(
+                    $winning_bid->bid_amount,
+                    2
+                )
+            );
+            ?>
+        </p>
+
+    <?php else : ?>
+
+        <p>No bids were placed.</p>
+
+    <?php endif; ?>
+
+    <p>
+        🏁 <strong>Auction Closed</strong><br>
+        This auction has ended. No further bids are accepted.
+    </p>
+
 </div>
 
 <?php elseif ( is_user_logged_in() ) : ?>
