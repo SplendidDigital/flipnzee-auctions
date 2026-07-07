@@ -60,6 +60,8 @@ if ( file_exists(
     require_once FLIPNZEE_AUCTION_PATH .
         'includes/class-bid-manager.php';
 }
+
+require_once FLIPNZEE_AUCTION_PATH . 'includes/class-payment-page.php';
 /**
  *  * Load Shortcodes Class
  */
@@ -108,7 +110,15 @@ require_once FLIPNZEE_AUCTION_PATH .
 
 require_once FLIPNZEE_AUCTION_PATH .
 	'admin/class-admin-transaction-details.php';
-	
+
+require_once FLIPNZEE_AUCTION_PATH .
+	'includes/class-my-purchases.php';
+
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-my-purchase-details.php';
+
+
+
 function flipnzee_auction_activate() {
 
     Flipnzee_Auction_Database::create_tables();

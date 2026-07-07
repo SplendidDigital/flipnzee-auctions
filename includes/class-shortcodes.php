@@ -21,6 +21,22 @@ class Flipnzee_Shortcodes {
 				'auctions_shortcode',
 			)
 		);
+
+        add_shortcode(
+	'flipnzee_my_purchases',
+	array(
+		'Flipnzee_My_Purchases',
+		'render',
+	)
+);
+
+add_shortcode(
+	'flipnzee_purchase_details',
+	array(
+		'Flipnzee_My_Purchase_Details',
+		'render',
+	)
+);
 	}
 
 	/**

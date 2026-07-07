@@ -68,7 +68,7 @@ add_submenu_page(
 );
 
 add_submenu_page(
-	null,
+	'flipnzee-auctions',
 	'Transaction Details',
 	'Transaction Details',
 	'manage_options',
@@ -78,7 +78,6 @@ add_submenu_page(
 		'render_page',
 	)
 );
-
 add_submenu_page(
 	'flipnzee-auctions',
 	'All Auctions',
