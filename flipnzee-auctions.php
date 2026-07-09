@@ -45,6 +45,13 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-database.php' ) ) {
 }
 
 /**
+ * Load Database Migration Class
+ */
+if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-database-migration.php' ) ) {
+	require_once FLIPNZEE_AUCTION_PATH . 'includes/class-database-migration.php';
+}
+
+/**
  * Load Activity Log Class
  */
 if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-activity-log.php' ) ) {
@@ -150,11 +157,16 @@ require_once FLIPNZEE_AUCTION_PATH .
 
 function flipnzee_auction_activate() {
 
-    if ( false === get_option( 'flipnzee_db_version', false ) ) {
-        Flipnzee_Auction_Database::create_tables();
-    }
+	if ( false === get_option( 'flipnzee_db_version', false ) ) {
 
-    Flipnzee_Auction_Database::update_db_version();
+		Flipnzee_Auction_Database::create_tables();
+
+	} else {
+
+		Flipnzee_Database_Migration::run();
+	}
+
+	Flipnzee_Auction_Database::update_db_version();
 }
 
 /*
