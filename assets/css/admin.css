@@ -1,0 +1,41 @@
+.flipnzee-dashboard-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.flipnzee-dashboard-card {
+    width: 180px;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    text-align: center;
+}
+
+.flipnzee-dashboard-card h2 {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.flipnzee-dashboard-card p {
+    margin-top: 10px;
+    font-weight: 600;
+    color: #50575e;
+}
+
+.flipnzee-dashboard-card {
+    transition: all .2s ease;
+}
+
+.flipnzee-dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.12);
+}
+
+.flipnzee-dashboard-card h2 {
+    color: #2271b1;
+}

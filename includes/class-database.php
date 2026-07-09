@@ -31,12 +31,11 @@ auction_start DATETIME NULL,
 auction_end DATETIME NULL,
 winner_user_id BIGINT UNSIGNED DEFAULT NULL,
 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (id),
 KEY listing_id (listing_id),
 KEY status (status)
 ) {$charset_collate};";
-		dbDelta( $sql );
 
 /*
  * Create bids table.
@@ -52,7 +51,7 @@ created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (id),
 KEY auction_id (auction_id)
 ) {$charset_collate};";
-dbDelta( $sql );
+//dbDelta( $sql ); 
 
 /*
  * Create transactions table.
@@ -66,15 +65,33 @@ listing_id BIGINT UNSIGNED NOT NULL,
 seller_id BIGINT UNSIGNED NOT NULL,
 buyer_id BIGINT UNSIGNED NOT NULL,
 winning_bid DECIMAL(12,2) NOT NULL,
+
 status VARCHAR(30) DEFAULT 'pending',
+
+payment_status VARCHAR(30) DEFAULT 'pending',
+
+payment_gateway VARCHAR(50) DEFAULT '',
+
+payment_proof_id BIGINT UNSIGNED DEFAULT NULL,
+
+payment_submitted_at DATETIME NULL,
+
 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
 PRIMARY KEY (id),
 KEY auction_id (auction_id),
 KEY buyer_id (buyer_id),
 KEY seller_id (seller_id),
-KEY status (status)
+KEY status (status),
+KEY payment_status (payment_status)
 ) {$charset_collate};";
 dbDelta( $sql );
-	}
+
+} // End create_tables()
+
+public static function update_db_version() {
+    update_option( 'flipnzee_db_version', FLIPNZEE_DB_VERSION );
 }
+
+} // End class

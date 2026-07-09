@@ -67,6 +67,20 @@ add_submenu_page(
     )
 );
 
+
+
+add_submenu_page(
+    'flipnzee-auctions',
+    'Payments',
+    'Payments',
+    'manage_options',
+    'flipnzee-payments',
+    array(
+        'Flipnzee_Admin_Payments',
+        'render_page',
+    )
+);
+
 add_submenu_page(
 	'flipnzee-auctions',
 	'Transaction Details',
@@ -104,10 +118,41 @@ add_submenu_page(
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'flipnzee_auctions';
+		$transactions_table = $wpdb->prefix . 'flipnzee_transactions';
 
 		$total_auctions = (int) $wpdb->get_var(
 			"SELECT COUNT(*) FROM {$table}"
 		);
+
+		$active_auctions = (int) $wpdb->get_var(
+    "SELECT COUNT(*) FROM {$table} WHERE status = 'active'"
+);
+
+$scheduled_auctions = (int) $wpdb->get_var(
+    "SELECT COUNT(*) FROM {$table} WHERE status = 'draft'"
+);
+
+$closed_auctions = (int) $wpdb->get_var(
+    "SELECT COUNT(*) FROM {$table} WHERE status = 'closed'"
+);
+
+$pending_transactions = (int) $wpdb->get_var(
+    "SELECT COUNT(*) FROM {$transactions_table}
+    WHERE payment_status = 'pending'"
+);
+
+$paid_transactions = (int) $wpdb->get_var(
+    "SELECT COUNT(*) FROM {$transactions_table}
+    WHERE payment_status = 'paid'"
+);
+
+$listings_with_active = (int) $wpdb->get_var(
+    "SELECT COUNT(DISTINCT listing_id)
+    FROM {$table}
+    WHERE status = 'active'"
+);
+
+		
 
 		?>
 
@@ -179,13 +224,64 @@ submit_button(
 </form>
 
 			<p>Welcome to the Flipnzee Auctions administration panel.</p>
+<div class="flipnzee-dashboard-grid">
 
-			
+<?php
 
-		</div>
+$cards = array(
 
-		<?php
-	}
+    'Total Auctions'               => $total_auctions,
+    'Active Auctions'              => $active_auctions,
+    'Scheduled Auctions'           => $scheduled_auctions,
+    'Closed Auctions'              => $closed_auctions,
+    'Listings With Active Auctions'=> $listings_with_active,
+    'Pending Payments'             => $pending_transactions,
+    'Paid Transactions'            => $paid_transactions,
+
+);
+
+
+foreach ( $cards as $title => $value ) {
+    $this->render_dashboard_card( $title, $value );
+}
+?>
+
+
+<?php
+}
+
+/**
+
+ * Render a dashboard statistic card.
+ *
+ * @param string $title Card title.
+ * @param mixed  $value Card value.
+ */
+private function render_dashboard_card( $title, $value ) {
+    ?>
+    <div class="flipnzee-dashboard-card">
+
+        <h2><?php echo esc_html( $value ); ?></h2>
+
+        <p><?php echo esc_html( $title ); ?></p>
+
+    </div>
+    <?php
+}
+
+/**
+ * Render an admin notice.
+ *
+ * @param string $message Notice message.
+ * @param string $type    Notice type.
+ */
+private function render_admin_notice( $message, $type = 'success' ) {
+    ?>
+    <div class="notice notice-<?php echo esc_attr( $type ); ?> is-dismissible">
+        <p><?php echo esc_html( $message ); ?></p>
+    </div>
+    <?php
+}
 
 	/**
 	 * Add Auction page.
@@ -476,9 +572,11 @@ $message = isset( $_GET['message'] )
 if ( 'updated' === $message ) :
 ?>
 
-	<div class="notice notice-success is-dismissible">
-		<p>Auction updated successfully.</p>
-	</div>
+	<?php
+$this->render_admin_notice(
+    'Auction updated successfully.'
+);
+?>
 
 <?php elseif ( 'error' === $message ) : ?>
 

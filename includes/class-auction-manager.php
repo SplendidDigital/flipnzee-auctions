@@ -29,17 +29,19 @@ class Flipnzee_Auction_Manager {
 
 $table = $wpdb->prefix . 'flipnzee_auctions';
 
+
 /*
  * Check whether this listing already has an auction.
  */
 $existing_auction = $wpdb->get_var(
-	$wpdb->prepare(
-		"SELECT id
-		FROM {$table}
-		WHERE listing_id = %d
-		LIMIT 1",
-		$listing_id
-	)
+    $wpdb->prepare(
+        "SELECT id
+        FROM {$table}
+        WHERE listing_id = %d
+        AND status IN ('active', 'scheduled')
+        LIMIT 1",
+        $listing_id
+    )
 );
 
 /*
@@ -58,7 +60,7 @@ if ( $existing_auction ) {
 		$auction_start,
 		$auction_end
 	);
-
+   
 	return $existing_auction;
 }
 $result = $wpdb->insert(
@@ -219,6 +221,11 @@ if ( $updated_count > 0 ) {
 			$updated_count
 		)
 	);
+	do_action(
+	'flipnzee_auction_winner_determined',
+	$auction,
+	$winner
+);
 	foreach ( $expired_auctions as $auction_id ) {
 
 	Flipnzee_Bid_Manager::determine_winner(
@@ -538,6 +545,11 @@ public static function activate_scheduled_auctions() {
 /**
  * Automatically close expired auctions.
  */
+/**
+ * Automatically close expired auctions.
+ *
+ * @return int Number of auctions closed.
+ */
 public static function close_expired_auctions() {
 
 	global $wpdb;
@@ -558,6 +570,7 @@ public static function close_expired_auctions() {
 			$current_time
 		)
 	);
+	return (int) $result;
 
 	$wpdb->query(
     $wpdb->prepare(

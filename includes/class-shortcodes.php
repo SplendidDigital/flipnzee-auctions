@@ -37,6 +37,11 @@ add_shortcode(
 		'render',
 	)
 );
+
+add_shortcode(
+    'flipnzee_payment_page',
+    array( 'Flipnzee_Payment_Page', 'render' )
+);
 	}
 
 	/**

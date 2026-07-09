@@ -86,6 +86,19 @@ if ( $transaction_id ) {
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'flipnzee_transactions';
+		$existing_transaction = $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT id
+         FROM {$table}
+         WHERE auction_id = %d
+         LIMIT 1",
+        absint( $data['auction_id'] )
+    )
+);
+
+if ( $existing_transaction ) {
+    return (int) $existing_transaction;
+}
 
 		$result = $wpdb->insert(
 			$table,
