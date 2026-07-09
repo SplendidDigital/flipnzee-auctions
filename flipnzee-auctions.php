@@ -150,9 +150,12 @@ require_once FLIPNZEE_AUCTION_PATH .
 
 function flipnzee_auction_activate() {
 
-   
-    Flipnzee_Auction_Database::create_tables();
-   Flipnzee_Auction_Database::update_db_version();
+    if ( false === get_option( 'flipnzee_db_version', false ) ) {
+        Flipnzee_Auction_Database::create_tables();
+    }
+
+    Flipnzee_Auction_Database::update_db_version();
+}
 
 /*
 if ( ! wp_next_scheduled( 'flipnzee_auction_maintenance' ) ) {
@@ -163,7 +166,7 @@ if ( ! wp_next_scheduled( 'flipnzee_auction_maintenance' ) ) {
     );
 }
 */
-}
+
 
 /**
  * Plugin Deactivation
