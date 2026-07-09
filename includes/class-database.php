@@ -91,7 +91,17 @@ dbDelta( $sql );
 } // End create_tables()
 
 public static function update_db_version() {
-    update_option( 'flipnzee_db_version', FLIPNZEE_DB_VERSION );
+
+    error_log( 'Flipnzee: update_db_version() entered' );
+
+    $result = update_option(
+        'flipnzee_db_version',
+        FLIPNZEE_DB_VERSION
+    );
+
+    error_log(
+        'Flipnzee: update_option() returned: ' . var_export( $result, true )
+    );
 }
 
 } // End class
