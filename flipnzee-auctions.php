@@ -15,7 +15,7 @@
 /**
  * Current database schema version.
  */
-define( 'FLIPNZEE_DB_VERSION', '1.1.0' );
+define( 'FLIPNZEE_DB_VERSION', '1.2.0' );
 
 
 
@@ -157,17 +157,34 @@ require_once FLIPNZEE_AUCTION_PATH .
 
 function flipnzee_auction_activate() {
 
-	if ( false === get_option( 'flipnzee_db_version', false ) ) {
+    error_log( 'FLIPNZEE ACTIVATION HOOK FIRED' );
+	global $wpdb;
 
-		Flipnzee_Auction_Database::create_tables();
-		Flipnzee_Auction_Database::update_db_version();
+$db_value = $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT option_value
+         FROM {$wpdb->options}
+         WHERE option_name = %s",
+        'flipnzee_db_version'
+    )
+);
 
-	} else {
+error_log( 'RAW DATABASE VALUE: ' . var_export( $db_value, true ) );
+error_log( 'GET_OPTION VALUE : ' . var_export( get_option( 'flipnzee_db_version' ), true ) );
 
-		Flipnzee_Database_Migration::run();
-	}
+    if ( false === get_option( 'flipnzee_db_version', false ) ) {
+
+        error_log( 'FLIPNZEE: Creating fresh database tables' );
+        Flipnzee_Auction_Database::create_tables();
+
+    } else {
+
+        error_log( 'FLIPNZEE: Running database migration' );
+        Flipnzee_Database_Migration::run();
+    }
+
+    Flipnzee_Auction_Database::update_db_version();
 }
-
 /**
  * Plugin Deactivation
  */

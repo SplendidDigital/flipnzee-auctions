@@ -20,14 +20,27 @@ class Flipnzee_Database_Migration {
 	 * Run pending database migrations.
 	 *
 	 * @return void
-	 */public static function run() {
-
-    $current_version = get_option( 'flipnzee_db_version', '1.0.0' );
+	 */
+	public static function run() {	
+		$current_version = get_option( 'flipnzee_db_version', '1.0.0' );
 
     if ( version_compare( $current_version, '1.1.0', '<' ) ) {
+
+        error_log( 'FLIPNZEE RUN: Calling migrate_to_1_1_0()' );
         self::migrate_to_1_1_0();
+
     }
 
+    if ( version_compare( $current_version, '1.2.0', '<' ) ) {
+
+        error_log( 'FLIPNZEE RUN: Calling migrate_to_1_2_0()' );
+        self::migrate_to_1_2_0();
+
+    } else {
+
+        error_log( 'FLIPNZEE RUN: Skipping migrate_to_1_2_0()' );
+
+    }
 }
 
     /**
@@ -120,9 +133,15 @@ public static function add_column( $table_name, $column_name, $column_definition
 		return true;
 	}
 
-	$result = $wpdb->query(
-		"ALTER TABLE `{$table_name}` ADD COLUMN {$column_definition}"
-	);
+$sql = "ALTER TABLE `{$table_name}` ADD COLUMN `{$column_name}` {$column_definition}";
+
+error_log( 'FLIPNZEE SQL: ' . $sql );
+
+$result = $wpdb->query( $sql );
+
+if ( false === $result ) {
+	error_log( 'FLIPNZEE SQL ERROR: ' . $wpdb->last_error );
+}
 
 	return false !== $result;
 }
@@ -154,8 +173,20 @@ public static function add_index( $table_name, $index_name, $index_sql ) {
 	$result = $wpdb->query(
 		"ALTER TABLE `{$table_name}` ADD {$index_sql}"
 	);
+if ( false === $result ) {
 
-	return false !== $result;
+	error_log(
+		'FLIPNZEE MIGRATION ERROR: ' . $wpdb->last_error
+	);
+
+	return false;
+}
+
+error_log(
+	"FLIPNZEE MIGRATION: Added {$column_name} column."
+);
+
+return true;
 }
 
 /**
@@ -178,6 +209,32 @@ private static function migrate_to_1_1_0() {
     update_option( 'flipnzee_db_version', '1.1.0' );
 
     error_log( 'FLIPNZEE MIGRATION: Database version updated to 1.1.0' );
+}
+private static function migrate_to_1_2_0() {
+
+    error_log( 'FLIPNZEE MIGRATION: Running database migration to version 1.2.0' );
+    error_log( 'FLIPNZEE MIGRATION: Checking payment_reference column...' );
+
+   global $wpdb;
+
+$table = $wpdb->prefix . 'flipnzee_transactions';
+
+if ( ! self::column_exists( $table, 'payment_reference' ) ) {
+
+    self::add_column(
+        $table,
+        'payment_reference',
+        'VARCHAR(100) NULL'
+    );
+
+    error_log(
+        'FLIPNZEE MIGRATION: Added payment_reference column.'
+    );
+}
+
+    update_option( 'flipnzee_db_version', '1.2.0' );
+
+    error_log( 'FLIPNZEE MIGRATION: Database version updated to 1.2.0' );
 }
 
 }
