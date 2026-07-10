@@ -86,6 +86,22 @@ KEY seller_id (seller_id),
 KEY status (status),
 KEY payment_status (payment_status)
 ) {$charset_collate};";
+$watchlist_table = $wpdb->prefix . 'flipnzee_watchlist';
+
+$watchlist_sql = "CREATE TABLE {$watchlist_table} (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    auction_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY auction_user (auction_id, user_id),
+    KEY auction_id (auction_id),
+    KEY user_id (user_id)
+
+) {$charset_collate};";
+
+dbDelta( $watchlist_sql );   // Watchlist table
 dbDelta( $sql );
 
 } // End create_tables()

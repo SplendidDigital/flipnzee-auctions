@@ -36,11 +36,23 @@ class Flipnzee_Database_Migration {
         error_log( 'FLIPNZEE RUN: Calling migrate_to_1_2_0()' );
         self::migrate_to_1_2_0();
 
-    } else {
-
-        error_log( 'FLIPNZEE RUN: Skipping migrate_to_1_2_0()' );
-
     }
+
+	if ( version_compare( $current_version, '1.3.0', '<' ) ) {
+
+    error_log( 'FLIPNZEE RUN: Calling migrate_to_1_3_0()' );
+	error_log(
+    'METHOD EXISTS? ' .
+    ( method_exists( __CLASS__, 'migrate_to_1_3_0' ) ? 'YES' : 'NO' )
+);
+
+error_log(
+    'CLASS METHODS: ' .
+    print_r( get_class_methods( __CLASS__ ), true )
+);
+    self::migrate_to_1_3_0();
+
+}
 }
 
     /**
@@ -235,6 +247,28 @@ if ( ! self::column_exists( $table, 'payment_reference' ) ) {
     update_option( 'flipnzee_db_version', '1.2.0' );
 
     error_log( 'FLIPNZEE MIGRATION: Database version updated to 1.2.0' );
+}
+/**
+ * Database migration to version 1.3.0.
+ *
+ * Creates the watchlist table.
+ *
+ * @return void
+ */
+private static function migrate_to_1_3_0() {
+
+    error_log(
+        'FLIPNZEE MIGRATION: Running database migration to version 1.3.0'
+    );
+
+   Flipnzee_Auction_Database::create_tables();
+
+    Flipnzee_Auction_Database::update_db_version();
+
+    error_log(
+        'FLIPNZEE MIGRATION: Database version updated to 1.3.0'
+    );
+
 }
 
 }

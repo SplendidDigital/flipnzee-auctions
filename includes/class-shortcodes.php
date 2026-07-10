@@ -470,17 +470,20 @@ $minimum_bid =
 </p>
 
 <?php endif; ?>
-
 <p class="flipnzee-auction-actions">
 
 	<a
 		href="<?php echo esc_url( get_permalink( $listing ) ); ?>"
 		class="flipnzee-view-listing-button"
 	>
-
 		View Listing
-
 	</a>
+
+	<?php
+	Flipnzee_Watchlist_Manager::render_button(
+		$listing->ID
+	);
+	?>
 
 </p>
 

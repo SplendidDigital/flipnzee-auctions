@@ -15,7 +15,7 @@
 /**
  * Current database schema version.
  */
-define( 'FLIPNZEE_DB_VERSION', '1.2.0' );
+define( 'FLIPNZEE_DB_VERSION', '1.3.0' );
 
 
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin Constants
  */
-define( 'FLIPNZEE_AUCTION_VERSION', '1.0.0' );
+define( 'FLIPNZEE_AUCTION_VERSION', '1.3.0' );
 define( 'FLIPNZEE_AUCTION_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FLIPNZEE_AUCTION_URL', plugin_dir_url( __FILE__ ) );
 
@@ -122,6 +122,9 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-auctions-table.php' ) ) {
 require_once FLIPNZEE_AUCTION_PATH .
 	'includes/class-transaction-manager.php';
 
+require_once FLIPNZEE_AUCTION_PATH . 
+     'includes/class-watchlist-manager.php';
+
 	/**
  * Plugin Activation
  */
@@ -154,6 +157,11 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-my-purchase-details.php';
 
+require_once FLIPNZEE_AUCTION_PATH . 
+    'includes/class-watchlist-ajax.php';
+
+
+
 
 function flipnzee_auction_activate() {
 
@@ -183,7 +191,7 @@ error_log( 'GET_OPTION VALUE : ' . var_export( get_option( 'flipnzee_db_version'
         Flipnzee_Database_Migration::run();
     }
 
-    Flipnzee_Auction_Database::update_db_version();
+    // Flipnzee_Auction_Database::update_db_version();
 }
 /**
  * Plugin Deactivation
@@ -239,6 +247,23 @@ function flipnzee_auction_enqueue_styles() {
 		FLIPNZEE_AUCTION_VERSION,
 		true
 	);
+
+	wp_enqueue_script(
+	'flipnzee-watchlist',
+	FLIPNZEE_AUCTION_URL . 'assets/js/watchlist.js',
+	array( 'jquery' ),
+	FLIPNZEE_AUCTION_VERSION,
+	true
+);
+
+wp_localize_script(
+	'flipnzee-watchlist',
+	'flipnzeeWatchlist',
+	array(
+		'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+		'nonce'   => wp_create_nonce( 'flipnzee_watchlist_nonce' ),
+	)
+);
 }
 
 add_action(
@@ -265,6 +290,7 @@ add_action(
 );
 new Flipnzee_Shortcodes();
 new Flipnzee_Transaction_Manager();
+new Flipnzee_Watchlist_Ajax();
 /**
  * Load Flipnzee admin styles.
  */
