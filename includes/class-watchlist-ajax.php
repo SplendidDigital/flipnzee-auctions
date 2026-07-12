@@ -37,9 +37,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 		);
 
 		add_action(
+	         'wp_ajax_nopriv_flipnzee_add_to_watchlist',
+	          array( $this, 'add_to_watchlist' )
+    );
+
+		add_action(
 			'wp_ajax_flipnzee_remove_from_watchlist',
 			array( $this, 'remove_from_watchlist' )
 		);
+
+        add_action(
+    'wp_ajax_nopriv_flipnzee_remove_from_watchlist',
+    array( $this, 'remove_from_watchlist' )
+);
 
 	}
 

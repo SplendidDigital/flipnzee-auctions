@@ -49,47 +49,6 @@ class Flipnzee_Watchlist_Manager {
  *
  * @return bool
  */
-public static function add_to_watchlist( $auction_id, $user_id ) {
-
-    self::init();
-
-    // Prevent duplicate entries.
-    if ( self::is_in_watchlist( $auction_id, $user_id ) ) {
-        return false;
-    }
-
-    $result = self::$wpdb->insert(
-    self::$table,
-    array(
-        'auction_id' => absint( $auction_id ),
-        'user_id'    => absint( $user_id ),
-        'created_at' => current_time( 'mysql' ),
-    ),
-    array(
-        '%d',
-        '%d',
-        '%s',
-    )
-);
-
-error_log( 'TABLE: ' . self::$table );
-error_log( 'USER: ' . $user_id );
-error_log( 'AUCTION: ' . $auction_id );
-error_log( 'INSERT RESULT: ' . var_export( $result, true ) );
-error_log( 'LAST ERROR: ' . self::$wpdb->last_error );
-error_log( 'LAST QUERY: ' . self::$wpdb->last_query );
-
-return false !== $result;
-}
-
-/**
- * Check whether an auction is already in a user's watchlist.
- *
- * @param int $auction_id Auction ID.
- * @param int $user_id    User ID.
- *
- * @return bool
- */
 public static function is_in_watchlist( $auction_id, $user_id ) {
 
     self::init();
@@ -117,6 +76,40 @@ public static function is_in_watchlist( $auction_id, $user_id ) {
  *
  * @return bool
  */
+/**
+ * Add an auction to a user's watchlist.
+ *
+ * @param int $auction_id Auction ID.
+ * @param int $user_id    User ID.
+ *
+ * @return bool
+ */
+public static function add_to_watchlist( $auction_id, $user_id ) {
+    error_log( 'ADD_TO_WATCHLIST METHOD EXECUTED' );
+
+    self::init();
+
+    // Prevent duplicates.
+    if ( self::is_in_watchlist( $auction_id, $user_id ) ) {
+        return true;
+    }
+
+    $result = self::$wpdb->insert(
+        self::$table,
+        array(
+            'auction_id' => absint( $auction_id ),
+            'user_id'    => absint( $user_id ),
+            'created_at' => current_time( 'mysql' ),
+        ),
+        array(
+            '%d',
+            '%d',
+            '%s',
+        )
+    );
+
+    return false !== $result;
+}
 public static function remove_from_watchlist( $auction_id, $user_id ) {
 
     self::init();
@@ -190,16 +183,43 @@ public static function count_watchers( $auction_id ) {
  * @param int $auction_id Auction ID.
  * @return void
  */
+/**
+ * Render the Watchlist button.
+ *
+ * @param int $auction_id Auction ID.
+ *
+ * @return void
+ */
 public static function render_button( $auction_id ) {
-	?>
-	<button
-		type="button"
-		class="flipnzee-watchlist-button"
-		data-auction-id="<?php echo esc_attr( $auction_id ); ?>">
-		❤ Add to Watchlist
-	</button>
-	<?php
+
+	self::init();
+    // Watchlist is available only to logged-in users.
+    if ( ! is_user_logged_in() ) {
+	    return;
 }
 
+	$is_watchlisted = self::is_in_watchlist(
+	$auction_id,
+	get_current_user_id()
+);
+	?>
+
+	<button
+		type="button"
+		class="flipnzee-watchlist-button<?php echo $is_watchlisted ? ' watchlisted' : ''; ?>"
+		data-auction-id="<?php echo esc_attr( $auction_id ); ?>">
+
+		<?php
+		echo esc_html(
+			$is_watchlisted
+				? '❤ Remove from Watchlist'
+				: '❤ Add to Watchlist'
+		);
+		?>
+
+	</button>
+
+	<?php
+}
 
 }

@@ -12,38 +12,52 @@ class Flipnzee_Shortcodes {
 	/**
 	 * Constructor.
 	 */
-	public function __construct() {
+	/**
+ * Constructor.
+ */
+public function __construct() {
 
-		add_shortcode(
-			'flipnzee_auctions',
-			array(
-				$this,
-				'auctions_shortcode',
-			)
-		);
+	add_shortcode(
+		'flipnzee_auctions',
+		array(
+			$this,
+			'auctions_shortcode',
+		)
+	);
 
-        add_shortcode(
-	'flipnzee_my_purchases',
-	array(
-		'Flipnzee_My_Purchases',
-		'render',
-	)
-);
+	add_shortcode(
+		'flipnzee_my_purchases',
+		array(
+			'Flipnzee_My_Purchases',
+			'render',
+		)
+	);
 
-add_shortcode(
-	'flipnzee_purchase_details',
-	array(
-		'Flipnzee_My_Purchase_Details',
-		'render',
-	)
-);
+	add_shortcode(
+		'flipnzee_purchase_details',
+		array(
+			'Flipnzee_My_Purchase_Details',
+			'render',
+		)
+	);
 
-add_shortcode(
-    'flipnzee_payment_page',
-    array( 'Flipnzee_Payment_Page', 'render' )
-);
-	}
+	add_shortcode(
+		'flipnzee_payment_page',
+		array(
+			'Flipnzee_Payment_Page',
+			'render',
+		)
+	);
 
+	add_shortcode(
+		'flipnzee_watchlist',
+		array(
+			$this,
+			'watchlist_shortcode',
+		)
+	);
+
+}
 	/**
 	 * Display auctions.
 	 *
@@ -480,9 +494,15 @@ $minimum_bid =
 	</a>
 
 	<?php
+	$auction = Flipnzee_Auction_Manager::get_auction_by_listing_id(
+	$listing->ID
+);
+
+if ( $auction ) {
 	Flipnzee_Watchlist_Manager::render_button(
-		$listing->ID
+		$auction->id
 	);
+}
 	?>
 
 </p>
@@ -500,5 +520,97 @@ $minimum_bid =
 	<?php
 
 	return ob_get_clean();
+}
+/**
+ * Render the My Watchlist shortcode.
+ *
+ * @return string
+ */
+/**
+ * Render the My Watchlist shortcode.
+ *
+ * @return string
+ */
+/**
+ * Render the My Watchlist shortcode.
+ *
+ * @return string
+ */
+public function watchlist_shortcode() {
+
+    if ( ! is_user_logged_in() ) {
+        return '<p>Please log in to view your Watchlist.</p>';
+    }
+
+    $user_id   = get_current_user_id();
+    $watchlist = Flipnzee_Watchlist_Manager::get_user_watchlist( $user_id );
+
+    ob_start();
+    ?>
+
+    <h2>My Watchlist</h2>
+
+    <?php
+
+    if ( empty( $watchlist ) ) {
+        ?>
+
+        <p>You have not added any auctions to your Watchlist yet.</p>
+
+        <?php
+        return ob_get_clean();
+    }
+
+    foreach ( $watchlist as $item ) {
+
+        $auction = Flipnzee_Auction_Manager::get_auction(
+            $item['auction_id']
+        );
+
+        if ( ! $auction ) {
+            continue;
+        }
+
+        $listing = get_post( $auction->listing_id );
+
+        if ( ! $listing ) {
+            continue;
+        }
+
+        ?>
+
+        <div class="flipnzee-watchlist-item">
+
+            <h3><?php echo esc_html( get_the_title( $listing ) ); ?></h3>
+
+            <p>
+                <strong>Auction ID:</strong>
+                <?php echo esc_html( $auction->id ); ?>
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                <?php echo esc_html( ucfirst( $auction->status ) ); ?>
+            </p>
+
+            <p>
+                <strong>Current Bid:</strong>
+                $<?php echo esc_html( number_format_i18n( $auction->current_bid, 2 ) ); ?>
+            </p>
+
+            <p>
+                <a href="<?php echo esc_url( get_permalink( $listing ) ); ?>">
+                    View Listing
+                </a>
+            </p>
+
+        </div>
+
+        <hr>
+
+        <?php
+    }
+
+    return ob_get_clean();
 }
 }

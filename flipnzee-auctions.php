@@ -248,6 +248,8 @@ function flipnzee_auction_enqueue_styles() {
 		true
 	);
 
+
+
 	wp_enqueue_script(
 	'flipnzee-watchlist',
 	FLIPNZEE_AUCTION_URL . 'assets/js/watchlist.js',

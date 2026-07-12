@@ -288,18 +288,43 @@ return $updated_count;
 	 */
 	public static function get_auction( $auction_id ) {
 
-		global $wpdb;
+	global $wpdb;
 
-		$table = $wpdb->prefix . 'flipnzee_auctions';
+	$table = $wpdb->prefix . 'flipnzee_auctions';
 
-		return $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE id = %d",
-				$auction_id
-			)
-		);
-	}
+	
 
+	$result = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT * FROM {$table} WHERE id = %d",
+			$auction_id
+		)
+	);
+
+	
+
+	return $result;
+}
+/**
+ * Retrieve one auction by Listing ID.
+ *
+ * @param int $listing_id Listing ID.
+ *
+ * @return object|null
+ */
+public static function get_auction_by_listing_id( $listing_id ) {
+
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'flipnzee_auctions';
+
+	return $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT * FROM {$table} WHERE listing_id = %d",
+			$listing_id
+		)
+	);
+}
 	/**
 	 * Retrieve all auctions.
 	 *

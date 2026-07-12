@@ -1,47 +1,13 @@
-/**
- * Flipnzee Auctions Watchlist
- *
- * Handles AJAX watchlist requests.
- */
+alert('watchlist.js loaded');
 
-(function ($) {
+document.addEventListener('click', function (e) {
 
-	'use strict';
+    if (!e.target.classList.contains('flipnzee-watchlist-button')) {
+        return;
+    }
 
-	$(document).ready(function () {
+    alert('BUTTON CLICKED');
 
-		console.log('Flipnzee Watchlist JS Loaded');
+    console.log(e.target);
 
-		$(document).on(
-			'click',
-			'.flipnzee-watchlist-button',
-			function (e) {
-
-				e.preventDefault();
-
-				const button = $(this);
-
-				const auctionId = button.data('auction-id');
-
-				console.log('Clicked auction:', auctionId);
-
-				$.post(
-					flipnzeeWatchlist.ajaxUrl,
-					{
-						action: 'flipnzee_add_to_watchlist',
-						auction_id: auctionId,
-						nonce: flipnzeeWatchlist.nonce
-					},
-					function (response) {
-
-						console.log(response);
-
-					}
-				);
-
-			}
-		);
-
-	});
-
-})(jQuery);
+});
