@@ -78,6 +78,7 @@ public function auctions_shortcode() {
 	}
 
 	ob_start();
+    echo '<div id="flipnzee-watchlist-container">';
 
 	?>
 
@@ -553,14 +554,17 @@ public function watchlist_shortcode() {
     <?php
 
     if ( empty( $watchlist ) ) {
-        ?>
 
-        <p>You have not added any auctions to your Watchlist yet.</p>
+    ?>
 
-        <?php
-        return ob_get_clean();
-    }
+    <p>You have not added any auctions to your Watchlist yet.</p>
 
+    <?php
+
+    
+    return ob_get_clean();
+
+}
     foreach ( $watchlist as $item ) {
 
         $auction = Flipnzee_Auction_Manager::get_auction(
@@ -572,21 +576,28 @@ public function watchlist_shortcode() {
         }
 
         $listing = get_post( $auction->listing_id );
+        
 
         if ( ! $listing ) {
             continue;
         }
+        
 
         ?>
 
         <div class="flipnzee-watchlist-item">
+            <?php
+if ( has_post_thumbnail( $listing ) ) {
+    echo get_the_post_thumbnail(
+        $listing,
+        'medium'
+    );
+}
+?>
 
             <h3><?php echo esc_html( get_the_title( $listing ) ); ?></h3>
 
-            <p>
-                <strong>Auction ID:</strong>
-                <?php echo esc_html( $auction->id ); ?>
-            </p>
+            
 
             <p>
                 <strong>Status:</strong>
@@ -597,12 +608,35 @@ public function watchlist_shortcode() {
                 <strong>Current Bid:</strong>
                 $<?php echo esc_html( number_format_i18n( $auction->current_bid, 2 ) ); ?>
             </p>
-
             <p>
-                <a href="<?php echo esc_url( get_permalink( $listing ) ); ?>">
-                    View Listing
-                </a>
-            </p>
+    <strong>Auction Ends:</strong>
+
+    <?php
+    echo esc_html(
+        mysql2date(
+            'F j, Y g:i A',
+            $auction->auction_end
+        )
+    );
+    ?>
+</p>
+
+            <p class="flipnzee-watchlist-actions">
+
+    <a
+        href="<?php echo esc_url( get_permalink( $listing ) ); ?>"
+        class="button"
+    >
+        View Listing
+    </a>
+
+    <?php
+    Flipnzee_Watchlist_Manager::render_button(
+    $auction->id
+);
+    ?>
+
+</p>
 
         </div>
 
@@ -610,7 +644,7 @@ public function watchlist_shortcode() {
 
         <?php
     }
-
+    
     return ob_get_clean();
 }
 }

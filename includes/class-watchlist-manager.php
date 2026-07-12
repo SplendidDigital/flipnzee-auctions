@@ -85,7 +85,7 @@ public static function is_in_watchlist( $auction_id, $user_id ) {
  * @return bool
  */
 public static function add_to_watchlist( $auction_id, $user_id ) {
-    error_log( 'ADD_TO_WATCHLIST METHOD EXECUTED' );
+   
 
     self::init();
 

@@ -51,6 +51,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     array( $this, 'remove_from_watchlist' )
 );
 
+add_action(
+    'wp_ajax_flipnzee_get_watchlist',
+    array( $this, 'get_watchlist' )
+);
 	}
 
 	/**
@@ -187,6 +191,25 @@ public function remove_from_watchlist() {
 		)
 	);
 
+}
+/**
+ * AJAX: Get refreshed Watchlist HTML.
+ *
+ * @return void
+ */
+public function get_watchlist() {
+
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error();
+    }
+
+    $shortcodes = new Flipnzee_Shortcodes();
+
+    wp_send_json_success(
+        array(
+            'html' => $shortcodes->watchlist_shortcode(),
+        )
+    );
 }
 
 }
