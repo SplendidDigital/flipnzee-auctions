@@ -886,3 +886,27 @@
     color: #555;
 
 }
+
+.flipnzee-transfer-status {
+
+    margin: 35px 0;
+
+}
+
+.flipnzee-transfer-card {
+
+    background: #fff;
+
+    border: 1px solid #e5e5e5;
+
+    border-radius: 8px;
+
+    padding: 20px;
+
+}
+
+.flipnzee-transfer-card table {
+
+    margin-top: 20px;
+
+}

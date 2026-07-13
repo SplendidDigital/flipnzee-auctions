@@ -120,6 +120,29 @@ $transfer_steps = array(
 		'completed' => false,
 	),
 );
+$transfer_status = array(
+
+    'payment' => 'Completed',
+
+    'files' => 'Pending',
+
+    'database' => 'Pending',
+
+    'domain' => 'Pending',
+
+    'buyer' => 'Pending',
+
+);
+
+$status_badges = array(
+
+	'Completed' => 'flipnzee-success',
+
+	'Pending' => 'flipnzee-pending',
+
+	'In Progress' => 'flipnzee-progress',
+
+);
 
 if ( ! empty( $transaction['payment_method'] ) ) {
 
@@ -250,105 +273,89 @@ ob_start();
 
 <table class="widefat striped" style="max-width:800px;">
 
-	<tbody>
+	<<tbody>
 
-		<tr>
-			<th>Transaction ID</th>
-			<td><?php echo esc_html( $transaction['id'] ); ?></td>
-		</tr>
+	<tr>
 
-		<tr>
+		<th>Payment</th>
 
-	<th>Reference</th>
+		<td>
 
-	<td>
+			<?php
+			echo esc_html(
+				$transfer_status['payment']
+			);
+			?>
 
-		<?php echo esc_html( $reference ); ?>
+		</td>
 
-	</td>
+	</tr>
 
-</tr>
+	<tr>
 
-		<tr>
-			<th>Auction</th>
-			<td>
-				<?php
-				echo esc_html(
-					get_the_title( $transaction['listing_id'] )
-				);
-				?>
-			</td>
-		</tr>
+		<th>Website Files</th>
 
-		<tr>
+		<td>
 
-	<th>Purchase Date</th>
+			<?php
+			echo esc_html(
+				$transfer_status['files']
+			);
+			?>
 
-	<td>
+		</td>
 
-		<?php echo esc_html( $purchase_date ); ?>
+	</tr>
 
-	</td>
+	<tr>
 
-</tr>
+		<th>Database</th>
 
-<tr>
+		<td>
 
-	<th>Purchase Time</th>
+			<?php
+			echo esc_html(
+				$transfer_status['database']
+			);
+			?>
 
-	<td>
+		</td>
 
-		<?php echo esc_html( $purchase_time ); ?>
+	</tr>
 
-	</td>
+	<tr>
 
-</tr>
+		<th>Domain Transfer</th>
 
-<tr>
+		<td>
 
-	<th>Payment Method</th>
+			<?php
+			echo esc_html(
+				$transfer_status['domain']
+			);
+			?>
 
-	<td>
+		</td>
 
-		<?php echo esc_html( $payment_method ); ?>
+	</tr>
 
-	</td>
+	<tr>
 
-</tr>
+		<th>Buyer Verification</th>
 
-		<tr>
-			<th>Winning Bid</th>
-			<td>
-				₹<?php echo number_format( $transaction['winning_bid'], 2 ); ?>
-			</td>
-		</tr>
+		<td>
 
-		<tr>
-    <th>Status</th>
+			<?php
+			echo esc_html(
+				$transfer_status['buyer']
+			);
+			?>
 
-    <td>
+		</td>
 
-        <span class="<?php echo esc_attr( $status_class ); ?>">
+	</tr>
 
-            <?php
-            echo esc_html(
-                ucfirst( $transaction['status'] )
-            );
-            ?>
-
-        </span>
-
-    </td>
-</tr>
-		<tr>
-			<th>Purchased</th>
-			<td>
-				<?php echo esc_html( $transaction['created_at'] ); ?>
-			</td>
-		</tr>
-
-	</tbody>
-
+</tbody>
 </table>
 
 <div class="flipnzee-purchase-info">
@@ -399,6 +406,206 @@ ob_start();
 
 </div>
 
+
+<div class="flipnzee-transfer-status">
+
+	<h3>Transfer Status</h3>
+
+	<div class="flipnzee-transfer-card">
+
+		<p>
+
+			The progress below reflects the latest
+			information provided by the seller.
+
+		</p>
+
+		<table class="widefat striped">
+
+			<tbody>
+
+				<tr>
+
+					<th>Payment</th>
+
+					<td>
+
+	<span
+		class="<?php echo esc_attr(
+			$status_badges[
+				$transfer_status['payment']
+			]
+		); ?>"
+	>
+
+		<?php
+		echo esc_html(
+			$transfer_status['payment']
+		);
+		?>
+
+	</span>
+
+</td>
+
+				</tr>
+
+				<tr>
+
+<div class="flipnzee-transfer-status">
+
+	<h3>Transfer Status</h3>
+
+	<div class="flipnzee-transfer-card">
+
+		<p>
+
+			The progress below reflects the latest
+			information provided by the seller.
+
+		</p>
+
+		<table class="widefat striped">
+
+			<tbody>
+
+				<tr>
+
+					<th>Payment</th>
+
+					<td>
+
+						<span class="<?php
+						echo esc_attr(
+							$status_badges[
+								$transfer_status['payment']
+							]
+						);
+						?>">
+
+							<?php
+							echo esc_html(
+								$transfer_status['payment']
+							);
+							?>
+
+						</span>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>Website Files</th>
+
+					<td>
+
+						<span class="<?php
+						echo esc_attr(
+							$status_badges[
+								$transfer_status['files']
+							]
+						);
+						?>">
+
+							<?php
+							echo esc_html(
+								$transfer_status['files']
+							);
+							?>
+
+						</span>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>Database</th>
+
+					<td>
+
+						<span class="<?php
+						echo esc_attr(
+							$status_badges[
+								$transfer_status['database']
+							]
+						);
+						?>">
+
+							<?php
+							echo esc_html(
+								$transfer_status['database']
+							);
+							?>
+
+						</span>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>Domain Transfer</th>
+
+					<td>
+
+						<span class="<?php
+						echo esc_attr(
+							$status_badges[
+								$transfer_status['domain']
+							]
+						);
+						?>">
+
+							<?php
+							echo esc_html(
+								$transfer_status['domain']
+							);
+							?>
+
+						</span>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>Buyer Verification</th>
+
+					<td>
+
+						<span class="<?php
+						echo esc_attr(
+							$status_badges[
+								$transfer_status['buyer']
+							]
+						);
+						?>">
+
+							<?php
+							echo esc_html(
+								$transfer_status['buyer']
+							);
+							?>
+
+						</span>
+
+					</td>
+
+				</tr>
+
+			</tbody>
+
+		</table>
+
+	</div>
+
+</div>
 <div class="flipnzee-next-steps">
 
 	<h3>Next Steps</h3>
