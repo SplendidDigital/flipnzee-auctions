@@ -224,8 +224,43 @@ return ob_get_clean();
 </tr>
 
 <tr>
+
     <th>Status</th>
-    <td><?php echo esc_html( ucfirst( $transaction->status ) ); ?></td>
+
+    <td>
+
+        <?php
+
+        $status = strtolower(
+            $transaction['status']
+        );
+
+        $class = 'flipnzee-status-pending';
+
+        if ( 'paid' === $status ) {
+
+            $class = 'flipnzee-status-paid';
+
+        } elseif ( 'completed' === $status ) {
+
+            $class = 'flipnzee-status-completed';
+
+        }
+
+        ?>
+
+        <span class="<?php echo esc_attr( $class ); ?>">
+
+            <?php
+            echo esc_html(
+                ucfirst( $status )
+            );
+            ?>
+
+        </span>
+
+    </td>
+
 </tr>
 
 <tr>
