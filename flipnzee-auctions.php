@@ -137,11 +137,6 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-payment-page.php';
 
-
-
-require_once FLIPNZEE_AUCTION_PATH .
-    'includes/class-payment-page.php';
-
 require_once FLIPNZEE_AUCTION_PATH .
     'admin/class-transactions-table.php';
 
@@ -159,6 +154,9 @@ require_once FLIPNZEE_AUCTION_PATH .
 
 require_once FLIPNZEE_AUCTION_PATH . 
     'includes/class-watchlist-ajax.php';
+
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-buyer-dashboard.php';
 
 
 
@@ -293,6 +291,7 @@ add_action(
 new Flipnzee_Shortcodes();
 new Flipnzee_Transaction_Manager();
 new Flipnzee_Watchlist_Ajax();
+new Flipnzee_Buyer_Dashboard();
 /**
  * Load Flipnzee admin styles.
  */
