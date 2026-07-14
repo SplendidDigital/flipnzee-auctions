@@ -121,10 +121,16 @@ if ( $existing_transaction ) {
 		);
 
 		if ( false === $result ) {
-			return false;
-		}
+    return false;
+}
 
-		return $wpdb->insert_id;
+$transaction_id = $wpdb->insert_id;
+
+Flipnzee_Transfer_Manager::create_transfer(
+    $transaction_id
+);
+
+return $transaction_id;
 	}
 
 	/**

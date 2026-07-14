@@ -102,6 +102,55 @@ $watchlist_sql = "CREATE TABLE {$watchlist_table} (
 ) {$charset_collate};";
 
 dbDelta( $watchlist_sql );   // Watchlist table
+
+/*
+ * Create transfer status table.
+ */
+
+$transfer_table =
+    $wpdb->prefix .
+    'flipnzee_transfer_status';
+
+$transfer_sql = "
+CREATE TABLE {$transfer_table} (
+
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    transaction_id BIGINT UNSIGNED NOT NULL,
+
+    payment_status VARCHAR(30)
+        NOT NULL DEFAULT 'Completed',
+
+    files_status VARCHAR(30)
+        NOT NULL DEFAULT 'Pending',
+
+    database_status VARCHAR(30)
+        NOT NULL DEFAULT 'Pending',
+
+    domain_status VARCHAR(30)
+        NOT NULL DEFAULT 'Pending',
+
+    buyer_status VARCHAR(30)
+        NOT NULL DEFAULT 'Pending',
+
+    notes LONGTEXT NULL,
+
+    created_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    UNIQUE KEY transaction_id
+        (transaction_id)
+
+) {$charset_collate};
+";
+
+dbDelta( $transfer_sql );
 dbDelta( $sql );
 
 } // End create_tables()

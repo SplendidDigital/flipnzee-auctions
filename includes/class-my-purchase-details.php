@@ -130,15 +130,41 @@ class Flipnzee_My_Purchase_Details {
 		/*
 		 * Transfer Manager.
 		 */
-		$transfer_steps =
-			Flipnzee_Transfer_Manager::get_default_steps();
+		$transfer =
+    Flipnzee_Transfer_Manager::get_transfer(
+        $transaction['id']
+    );
 
-		$transfer_status =
-			Flipnzee_Transfer_Manager::get_default_status();
+$transfer_status =
+    Flipnzee_Transfer_Manager::get_default_status();
 
-		$status_badges =
-			Flipnzee_Transfer_Manager::get_status_badges();
+$transfer_steps =
+    Flipnzee_Transfer_Manager::get_default_steps();
 
+if ( ! empty( $transfer ) ) {
+
+    $transfer_status = array(
+
+        'payment' => $transfer['payment'],
+
+        'files' => $transfer['files'],
+
+        'database' => $transfer['database'],
+
+        'domain' => $transfer['domain'],
+
+        'buyer' => $transfer['buyer'],
+
+    );
+
+    $transfer_steps =
+        Flipnzee_Transfer_Manager::build_steps(
+            $transfer
+        );
+
+}
+$status_badges =
+    Flipnzee_Transfer_Manager::get_status_badges();
 		ob_start();
 ?>
 

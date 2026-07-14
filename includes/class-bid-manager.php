@@ -120,22 +120,7 @@ if ( $bid_amount < $minimum_allowed_bid ) {
 	/*
 	 * Update current bid.
 	 */
-	$wpdb->update(
-
-		$auction_table,
-		array(
-			'current_bid' => $bid_amount,
-		),
-		array(
-			'id' => $auction_id,
-		),
-		array(
-			'%f',
-		),
-		array(
-			'%d',
-		)
-	);
+	
 $wpdb->update(
 	$auction_table,
 	array(
@@ -148,8 +133,7 @@ $wpdb->update(
 		'%f',
 	),
 	array(
-		'%d',
-	)
+		'%d',	)
 );
 
 /*
@@ -200,7 +184,7 @@ if ( $auction ) {
 }
 
 return true;
-	return true;
+	
 }
 /**
  * Get all bids for an auction.

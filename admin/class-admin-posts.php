@@ -219,7 +219,15 @@ public function handle_place_bid() {
 
 $url = wp_get_referer();
 
-if ( $result ) {
+if ( is_wp_error( $result ) ) {
+
+    $url = add_query_arg(
+        'bid',
+        'already_highest',
+        $url
+    );
+
+} elseif ( $result ) {
 
     $url = add_query_arg(
         'bid',
@@ -236,7 +244,6 @@ if ( $result ) {
     );
 
 }
-
 wp_safe_redirect( $url );
 
 exit;

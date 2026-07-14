@@ -161,6 +161,9 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-transfer-manager.php';
 
+require_once FLIPNZEE_AUCTION_PATH .
+    'admin/class-admin-transfer.php';
+
 
 
 

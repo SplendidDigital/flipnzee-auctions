@@ -1,5 +1,315 @@
 <?php
 class Flipnzee_Transfer_Manager {
+    /**
+ * Transfer table name.
+ *
+ * @return string
+ */
+private static function get_table_name() {
+
+    global $wpdb;
+
+    return $wpdb->prefix .
+        'flipnzee_transfer_status';
+
+}
+
+/**
+ * Create transfer record.
+ *
+ * @param int $transaction_id Transaction ID.
+ *
+ * @return bool
+ */
+public static function create_transfer(
+    $transaction_id
+) {
+    global $wpdb;
+
+    $table = self::get_table_name();
+
+    $exists = $wpdb->get_var(
+
+        $wpdb->prepare(
+
+            "
+            SELECT id
+            FROM {$table}
+            WHERE transaction_id = %d
+            LIMIT 1
+            ",
+
+            absint(
+                $transaction_id
+            )
+
+        )
+
+    );
+
+    if ( $exists ) {
+
+        return true;
+
+    }
+
+    $result = $wpdb->insert(
+
+        $table,
+
+        array(
+
+            'transaction_id' => absint(
+                $transaction_id
+            ),
+
+            'payment_status' => 'Completed',
+
+            'files_status'    => 'Pending',
+
+            'database_status' => 'Pending',
+
+            'domain_status'   => 'Pending',
+
+            'buyer_status'    => 'Pending',
+
+            'notes'           => '',
+
+        ),
+
+        array(
+
+            '%d',
+
+            '%s',
+
+            '%s',
+
+            '%s',
+
+            '%s',
+
+            '%s',
+
+            '%s',
+
+        )
+
+    );
+
+    return false !== $result;
+
+}
+/**
+ * Get transfer record.
+ *
+ * @param int $transaction_id Transaction ID.
+ *
+ * @return array|null
+ */
+public static function get_transfer(
+    $transaction_id
+) {
+
+    global $wpdb;
+
+    $table = self::get_table_name();
+
+    return $wpdb->get_row(
+
+        $wpdb->prepare(
+
+            "
+            SELECT *
+            FROM {$table}
+            WHERE transaction_id = %d
+            LIMIT 1
+            ",
+
+            absint( $transaction_id )
+
+        ),
+
+        ARRAY_A
+
+    );
+
+}
+/**
+ * Update transfer status.
+ *
+ * @param int    $transaction_id Transaction ID.
+ * @param string $field          Status field.
+ * @param string $value          Status value.
+ *
+ * @return bool
+ */
+public static function update_status(
+    $transaction_id,
+    $field,
+    $value
+) {
+
+    global $wpdb;
+
+    $allowed = array(
+        'payment',
+        'files',
+        'database',
+        'domain',
+        'buyer',
+    );
+
+    if ( ! in_array( $field, $allowed, true ) ) {
+        return false;
+    }
+
+    $table = self::get_table_name();
+
+    $result = $wpdb->update(
+
+        $table,
+
+        array(
+            $field => sanitize_text_field( $value ),
+        ),
+
+        array(
+            'transaction_id' => absint( $transaction_id ),
+        ),
+
+        array(
+            '%s',
+        ),
+
+        array(
+            '%d',
+        )
+
+    );
+
+    return false !== $result;
+
+}
+
+/**
+ * Update transfer notes.
+ *
+ * @param int    $transaction_id Transaction ID.
+ * @param string $notes          Notes.
+ *
+ * @return bool
+ */
+public static function update_notes(
+    $transaction_id,
+    $notes
+) {
+
+    global $wpdb;
+
+    $table = self::get_table_name();
+
+    $result = $wpdb->update(
+
+        $table,
+
+        array(
+            'notes' => sanitize_textarea_field(
+                $notes
+            ),
+        ),
+
+        array(
+            'transaction_id' => absint(
+                $transaction_id
+            ),
+        ),
+
+        array(
+            '%s',
+        ),
+
+        array(
+            '%d',
+        )
+
+    );
+
+    return false !== $result;
+}
+
+    /**
+ * Update an entire transfer.
+ *
+ * @param int   $transaction_id Transaction ID.
+ * @param array $data           Transfer data.
+ *
+ * @return bool
+ */
+public static function update_transfer(
+    $transaction_id,
+    $data
+) {
+
+    global $wpdb;
+
+    $table = self::get_table_name();
+
+    $result = $wpdb->update(
+
+        $table,
+
+        array(
+
+            'payment_status' => sanitize_text_field(
+                $data['payment_status']
+            ),
+
+            'files_status' => sanitize_text_field(
+                $data['files_status']
+            ),
+
+            'database_status' => sanitize_text_field(
+                $data['database_status']
+            ),
+
+            'domain_status' => sanitize_text_field(
+                $data['domain_status']
+            ),
+
+            'buyer_status' => sanitize_text_field(
+                $data['buyer_status']
+            ),
+
+            'notes' => sanitize_textarea_field(
+                $data['notes']
+            ),
+
+        ),
+
+        array(
+            'transaction_id' => absint(
+                $transaction_id
+            ),
+        ),
+
+        array(
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+        ),
+
+        array(
+            '%d',
+        )
+
+    );
+
+    return false !== $result;
+}
 
 	/**
 	 * Default transfer steps.
@@ -43,7 +353,92 @@ class Flipnzee_Transfer_Manager {
 		);
 
 	}
+/**
+ * Check whether transfer is completed.
+ *
+ * @param int $transaction_id Transaction ID.
+ *
+ * @return bool
+ */
+/**
+ * Build transfer steps from database status.
+ *
+ * @param array $transfer Transfer row.
+ *
+ * @return array
+ */
+public static function build_steps(
+    $transfer
+) {
 
+    return array(
+
+        array(
+            'label'     => 'Payment Confirmed',
+            'completed' => (
+                'Completed' === $transfer['payment']
+            ),
+        ),
+
+        array(
+            'label'     => 'Website Files Delivered',
+            'completed' => (
+                'Completed' === $transfer['files']
+            ),
+        ),
+
+        array(
+            'label'     => 'Database Delivered',
+            'completed' => (
+                'Completed' === $transfer['database']
+            ),
+        ),
+
+        array(
+            'label'     => 'Domain Transfer Completed',
+            'completed' => (
+                'Completed' === $transfer['domain']
+            ),
+        ),
+
+        array(
+            'label'     => 'Buyer Verification',
+            'completed' => (
+                'Completed' === $transfer['buyer']
+            ),
+        ),
+
+        array(
+            'label'     => 'Purchase Completed',
+            'completed' => self::is_completed(
+                $transfer['transaction_id']
+            ),
+        ),
+
+    );
+
+}
+public static function is_completed(
+    $transaction_id
+) {
+
+    $transfer = self::get_transfer(
+        $transaction_id
+    );
+
+    if ( empty( $transfer ) ) {
+        return false;
+    }
+
+    return (
+        'Completed' === $transfer['payment'] &&
+        'Completed' === $transfer['files'] &&
+        'Completed' === $transfer['database'] &&
+        'Completed' === $transfer['domain'] &&
+        'Completed' === $transfer['buyer']
+    );
+
+}
 	/**
 	 * Default transfer status.
 	 *

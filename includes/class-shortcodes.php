@@ -287,7 +287,7 @@ if ( isset( $_GET['bid'] ) ) {
 <?php else : ?>
 
 <tr>
-    <th>Auction Ends In</th>
+    <th>Auction Ends</th>
     <td
         class="flipnzee-countdown"
         data-end="<?php echo esc_attr( $auction['auction_end'] ); ?>"
