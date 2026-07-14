@@ -158,6 +158,9 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-buyer-dashboard.php';
 
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-transfer-manager.php';
+
 
 
 

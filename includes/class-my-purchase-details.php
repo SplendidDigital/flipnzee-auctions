@@ -1,4 +1,9 @@
 <?php
+/**
+ * Buyer Purchase Details.
+ *
+ * @package Flipnzee_Auctions
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -19,136 +24,122 @@ class Flipnzee_My_Purchase_Details {
 		if ( ! is_user_logged_in() ) {
 
 			return '<p>Please log in to view this purchase.</p>';
+
 		}
-        $transaction_id = isset( $_GET['transaction_id'] )
-	? absint( $_GET['transaction_id'] )
-	: 0;
 
-if ( ! $transaction_id ) {
+		$transaction_id = isset( $_GET['transaction_id'] )
+			? absint( $_GET['transaction_id'] )
+			: 0;
 
-    return '<p>No purchase selected.</p>';
-}
+		if ( ! $transaction_id ) {
+
+			return '<p>No purchase selected.</p>';
+
+		}
 
 		global $wpdb;
 
-$table = $wpdb->prefix . 'flipnzee_transactions';
+		$table = $wpdb->prefix . 'flipnzee_transactions';
 
-$transaction = $wpdb->get_row(
-	$wpdb->prepare(
-		"SELECT * FROM {$table}
-		WHERE id = %d
-		AND buyer_id = %d",
-		$transaction_id,
-		get_current_user_id()
-	),
-	ARRAY_A
-);
+		$transaction = $wpdb->get_row(
 
-if ( ! $transaction ) {
+			$wpdb->prepare(
 
-	return '<p>Transaction not found.</p>';
-}
+				"SELECT *
+				FROM {$table}
+				WHERE id = %d
+				AND buyer_id = %d",
 
-$listing_id = absint( $transaction['listing_id'] );
+				$transaction_id,
 
-$thumbnail = get_the_post_thumbnail(
-	$listing_id,
-	'medium'
-);
+				get_current_user_id()
 
-$listing_url = get_permalink( $listing_id );
-$status_class =
-	'flipnzee-status-' .
-	sanitize_html_class(
-		strtolower( $transaction['status'] )
-	);
-	$listing_title = get_the_title( $transaction['listing_id'] );
+			),
 
-$listing_url = get_permalink( $transaction['listing_id'] );
+			ARRAY_A
 
-$listing_thumbnail = get_the_post_thumbnail(
-	$transaction['listing_id'],
-	'medium'
-);
+		);
 
-$reference = sprintf(
-	'FLIP-%s-%06d',
-	gmdate( 'Y' ),
-	$transaction['id']
-);
-$purchase_date = date_i18n(
-	get_option( 'date_format' ),
-	strtotime( $transaction['created_at'] )
-);
+		if ( ! $transaction ) {
 
-$purchase_time = date_i18n(
-	get_option( 'time_format' ),
-	strtotime( $transaction['created_at'] )
-);
+			return '<p>Transaction not found.</p>';
 
-$payment_method = 'Manual';
+		}
 
-$transfer_steps = array(
+		$listing_id = absint(
+			$transaction['listing_id']
+		);
 
-	array(
-		'label'     => 'Payment Confirmed',
-		'completed' => true,
-	),
+		$listing_title = get_the_title(
+			$listing_id
+		);
 
-	array(
-		'label'     => 'Website Files Delivered',
-		'completed' => false,
-	),
+		$listing_url = get_permalink(
+			$listing_id
+		);
 
-	array(
-		'label'     => 'Database Delivered',
-		'completed' => false,
-	),
+		$thumbnail = get_the_post_thumbnail(
+			$listing_id,
+			'medium'
+		);
 
-	array(
-		'label'     => 'Domain Transfer Completed',
-		'completed' => false,
-	),
+		$status_class =
+			'flipnzee-status-' .
+			sanitize_html_class(
+				strtolower(
+					$transaction['status']
+				)
+			);
 
-	array(
-		'label'     => 'Buyer Verification',
-		'completed' => false,
-	),
+		$reference = sprintf(
 
-	array(
-		'label'     => 'Purchase Completed',
-		'completed' => false,
-	),
-);
-$transfer_status = array(
+			'FLIP-%s-%06d',
 
-    'payment' => 'Completed',
+			gmdate( 'Y' ),
 
-    'files' => 'Pending',
+			$transaction['id']
 
-    'database' => 'Pending',
+		);
 
-    'domain' => 'Pending',
+		$purchase_date = date_i18n(
 
-    'buyer' => 'Pending',
+			get_option( 'date_format' ),
 
-);
+			strtotime(
+				$transaction['created_at']
+			)
 
-$status_badges = array(
+		);
 
-	'Completed' => 'flipnzee-success',
+		$purchase_time = date_i18n(
 
-	'Pending' => 'flipnzee-pending',
+			get_option( 'time_format' ),
 
-	'In Progress' => 'flipnzee-progress',
+			strtotime(
+				$transaction['created_at']
+			)
 
-);
+		);
 
-if ( ! empty( $transaction['payment_method'] ) ) {
+		$payment_method = ! empty(
+			$transaction['payment_method']
+		)
+			? $transaction['payment_method']
+			: 'Manual';
 
-	$payment_method = $transaction['payment_method'];
-}
-ob_start();
+		/*
+		 * Transfer Manager.
+		 */
+		$transfer_steps =
+			Flipnzee_Transfer_Manager::get_default_steps();
+
+		$transfer_status =
+			Flipnzee_Transfer_Manager::get_default_status();
+
+		$status_badges =
+			Flipnzee_Transfer_Manager::get_status_badges();
+
+		ob_start();
 ?>
 
 <h2>Purchase Details</h2>
@@ -157,25 +148,17 @@ ob_start();
 
 	<?php if ( ! empty( $thumbnail ) ) : ?>
 
-	<div class="flipnzee-purchase-image">
+		<div class="flipnzee-purchase-image">
 
-		<?php echo $thumbnail; ?>
+			<?php echo wp_kses_post( $thumbnail ); ?>
 
-	</div>
+		</div>
 
-<?php endif; ?>
+	<?php endif; ?>
 
 	<div class="flipnzee-purchase-summary">
 
-		<h3>
-
-			<?php
-			echo esc_html(
-				get_the_title( $listing_id )
-			);
-			?>
-
-		</h3>
+		<h3><?php echo esc_html( $listing_title ); ?></h3>
 
 		<p>
 
@@ -196,23 +179,20 @@ ob_start();
 			<strong>Winning Bid:</strong>
 
 			₹<?php
-			echo number_format(
-				$transaction['winning_bid'],
-				2
-			);
-			?>
-
+echo esc_html(
+    number_format(
+        $transaction['winning_bid'],
+        2
+    )
+);
+?>
 		</p>
 
 		<p>
 
 			<strong>Purchased:</strong>
 
-			<?php
-			echo esc_html(
-				$transaction['created_at']
-			);
-			?>
+			<?php echo esc_html( $purchase_date ); ?>
 
 		</p>
 
@@ -233,129 +213,175 @@ ob_start();
 
 </div>
 
-
-
 <h3>Purchase Timeline</h3>
 
 <ul class="flipnzee-purchase-timeline">
 
-	<li class="completed">
-		Auction Won
-	</li>
+	<?php foreach ( $transfer_steps as $step ) : ?>
 
-	<li class="completed">
-		Payment Received
-	</li>
+		<li
+			class="<?php
+			echo $step['completed']
+				? 'completed'
+				: '';
+			?>">
 
-	<?php if ( 'completed' === strtolower( $transaction['status'] ) ) : ?>
+			<?php
+			echo esc_html(
+				$step['label']
+			);
+			?>
 
-		<li class="completed">
-			Website Transfer Completed
 		</li>
 
-		<li class="completed">
-			Purchase Completed
-		</li>
-
-	<?php else : ?>
-
-		<li>
-			Website Transfer Pending
-		</li>
-
-		<li>
-			Purchase Pending
-		</li>
-
-	<?php endif; ?>
+	<?php endforeach; ?>
 
 </ul>
 
-<table class="widefat striped" style="max-width:800px;">
+<table
+	class="widefat striped"
+	style="max-width:800px;"
+>
 
-	<<tbody>
+	<tbody>
 
-	<tr>
+		<tr>
 
-		<th>Payment</th>
+			<th>Transaction ID</th>
 
-		<td>
+			<td>
 
-			<?php
-			echo esc_html(
-				$transfer_status['payment']
-			);
-			?>
+				<?php
+				echo esc_html(
+					$transaction['id']
+				);
+				?>
 
-		</td>
+			</td>
 
-	</tr>
+		</tr>
 
-	<tr>
+		<tr>
 
-		<th>Website Files</th>
+			<th>Reference</th>
 
-		<td>
+			<td>
 
-			<?php
-			echo esc_html(
-				$transfer_status['files']
-			);
-			?>
+				<?php
+				echo esc_html(
+					$reference
+				);
+				?>
 
-		</td>
+			</td>
 
-	</tr>
+		</tr>
 
-	<tr>
+		<tr>
 
-		<th>Database</th>
+			<th>Auction</th>
 
-		<td>
+			<td>
 
-			<?php
-			echo esc_html(
-				$transfer_status['database']
-			);
-			?>
+				<?php
+				echo esc_html(
+					$listing_title
+				);
+				?>
 
-		</td>
+			</td>
 
-	</tr>
+		</tr>
 
-	<tr>
+		<tr>
 
-		<th>Domain Transfer</th>
+			<th>Purchase Date</th>
 
-		<td>
+			<td>
 
-			<?php
-			echo esc_html(
-				$transfer_status['domain']
-			);
-			?>
+				<?php
+				echo esc_html(
+					$purchase_date
+				);
+				?>
 
-		</td>
+			</td>
 
-	</tr>
+		</tr>
 
-	<tr>
+		<tr>
 
-		<th>Buyer Verification</th>
+			<th>Purchase Time</th>
 
-		<td>
+			<td>
 
-			<?php
-			echo esc_html(
-				$transfer_status['buyer']
-			);
-			?>
+				<?php
+				echo esc_html(
+					$purchase_time
+				);
+				?>
 
-		</td>
+			</td>
 
-	</tr>
+		</tr>
 
-</tbody>
+		<tr>
+
+			<th>Payment Method</th>
+
+			<td>
+
+				<?php
+				echo esc_html(
+					$payment_method
+				);
+				?>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>Winning Bid</th>
+
+			<td>
+
+				₹<?php
+				echo number_format(
+					$transaction['winning_bid'],
+					2
+				);
+				?>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>Status</th>
+
+			<td>
+
+				<span class="<?php echo esc_attr( $status_class ); ?>">
+
+					<?php
+					echo esc_html(
+						ucfirst(
+							$transaction['status']
+						)
+					);
+					?>
+
+				</span>
+
+			</td>
+
+		</tr>
+
+	</tbody>
+
 </table>
 
 <div class="flipnzee-purchase-info">
@@ -382,9 +408,9 @@ ob_start();
 
 		<p>
 
-			The seller will provide the necessary
-			website files, database and domain
-			transfer instructions.
+			The website owner will provide the
+			website files, database and
+			domain transfer instructions.
 
 		</p>
 
@@ -406,7 +432,6 @@ ob_start();
 
 </div>
 
-
 <div class="flipnzee-transfer-status">
 
 	<h3>Transfer Status</h3>
@@ -416,76 +441,61 @@ ob_start();
 		<p>
 
 			The progress below reflects the latest
-			information provided by the seller.
+			transfer information.
 
 		</p>
 
-		<table class="widefat striped">
+		<table
+			class="widefat striped"
+			style="max-width:700px;"
+		>
 
 			<tbody>
 
-				<tr>
-
-					<th>Payment</th>
-
-					<td>
-
-	<span
-		class="<?php echo esc_attr(
-			$status_badges[
-				$transfer_status['payment']
-			]
-		); ?>"
-	>
-
-		<?php
-		echo esc_html(
-			$transfer_status['payment']
-		);
-		?>
-
-	</span>
-
-</td>
-
-				</tr>
+			<?php foreach ( $transfer_status as $key => $value ) : ?>
 
 				<tr>
 
-<div class="flipnzee-transfer-status">
+					<th>
 
-	<h3>Transfer Status</h3>
+						<?php
 
-	<div class="flipnzee-transfer-card">
+						$labels = array(
 
-		<p>
+							'payment' => 'Payment',
 
-			The progress below reflects the latest
-			information provided by the seller.
+							'files' => 'Website Files',
 
-		</p>
+							'database' => 'Database',
 
-		<table class="widefat striped">
+							'domain' => 'Domain Transfer',
 
-			<tbody>
+							'buyer' => 'Buyer Verification',
 
-				<tr>
-
-					<th>Payment</th>
-
-					<td>
-
-						<span class="<?php
-						echo esc_attr(
-							$status_badges[
-								$transfer_status['payment']
-							]
 						);
-						?>">
+
+						echo esc_html(
+							$labels[ $key ]
+						);
+
+						?>
+
+					</th>
+
+					<td>
+
+						<span
+							class="<?php
+							echo esc_attr(
+								$status_badges[
+									$value
+								]
+							);
+							?>">
 
 							<?php
 							echo esc_html(
-								$transfer_status['payment']
+								$value
 							);
 							?>
 
@@ -495,109 +505,7 @@ ob_start();
 
 				</tr>
 
-				<tr>
-
-					<th>Website Files</th>
-
-					<td>
-
-						<span class="<?php
-						echo esc_attr(
-							$status_badges[
-								$transfer_status['files']
-							]
-						);
-						?>">
-
-							<?php
-							echo esc_html(
-								$transfer_status['files']
-							);
-							?>
-
-						</span>
-
-					</td>
-
-				</tr>
-
-				<tr>
-
-					<th>Database</th>
-
-					<td>
-
-						<span class="<?php
-						echo esc_attr(
-							$status_badges[
-								$transfer_status['database']
-							]
-						);
-						?>">
-
-							<?php
-							echo esc_html(
-								$transfer_status['database']
-							);
-							?>
-
-						</span>
-
-					</td>
-
-				</tr>
-
-				<tr>
-
-					<th>Domain Transfer</th>
-
-					<td>
-
-						<span class="<?php
-						echo esc_attr(
-							$status_badges[
-								$transfer_status['domain']
-							]
-						);
-						?>">
-
-							<?php
-							echo esc_html(
-								$transfer_status['domain']
-							);
-							?>
-
-						</span>
-
-					</td>
-
-				</tr>
-
-				<tr>
-
-					<th>Buyer Verification</th>
-
-					<td>
-
-						<span class="<?php
-						echo esc_attr(
-							$status_badges[
-								$transfer_status['buyer']
-							]
-						);
-						?>">
-
-							<?php
-							echo esc_html(
-								$transfer_status['buyer']
-							);
-							?>
-
-						</span>
-
-					</td>
-
-				</tr>
+			<?php endforeach; ?>
 
 			</tbody>
 
@@ -606,52 +514,92 @@ ob_start();
 	</div>
 
 </div>
+
 <div class="flipnzee-next-steps">
 
 	<h3>Next Steps</h3>
 
 	<ul class="flipnzee-transfer-progress">
 
-<?php foreach ( $transfer_steps as $step ) : ?>
+		<?php foreach ( $transfer_steps as $step ) : ?>
 
-	<li
-		class="<?php echo $step['completed']
-			? 'completed'
-			: 'pending'; ?>">
+			<li
+				class="<?php
+				echo $step['completed']
+					? 'completed'
+					: 'pending';
+				?>">
 
-		<?php
-		echo $step['completed']
-			? '✓ '
-			: '○ ';
+				<?php
 
-		echo esc_html(
-			$step['label']
-		);
-		?>
+				echo $step['completed']
+					? '✓ '
+					: '○ ';
 
-	</li>
+				echo esc_html(
+					$step['label']
+				);
 
-<?php endforeach; ?>
+				?>
 
-</ul>
+			</li>
+
+		<?php endforeach; ?>
+
+	</ul>
+
 </div>
+
+    
 
 <div class="flipnzee-purchase-notes">
 
-    <h3>Purchase Notes</h3>
+	<h3>Purchase Notes</h3>
 
-    <div class="flipnzee-note-box">
+	<div class="flipnzee-note-box">
 
-        <p>
+		<p>
 
-            No notes available.
+			Thank you for purchasing through
+			Flipnzee Auctions.
 
-        </p>
+		</p>
 
-    </div>
+		<ul>
+
+			<li>
+
+				Verify the website after receiving
+				all files.
+
+			</li>
+
+			<li>
+
+				Change all passwords immediately
+				after the transfer is completed.
+
+			</li>
+
+			<li>
+
+				Confirm that domain ownership has
+				been transferred successfully.
+
+			</li>
+
+			<li>
+
+				Contact support if you require
+				assistance during the transfer.
+
+			</li>
+
+		</ul>
+
+	</div>
 
 </div>
-
 
 <div class="flipnzee-purchase-actions">
 
@@ -686,6 +634,7 @@ ob_start();
 
 <?php
 
-return ob_get_clean();
+		return ob_get_clean();
+
 	}
 }
