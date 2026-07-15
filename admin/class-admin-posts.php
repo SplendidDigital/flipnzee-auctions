@@ -167,6 +167,34 @@ $auction_end = isset( $_POST['auction_end'] )
     $auction_start,
     $auction_end
 );
+
+error_log(
+    'FLIPNZEE: updated = ' .
+    var_export( $updated, true )
+);
+
+error_log(
+    'FLIPNZEE: status = ' .
+    $status
+);
+
+if ( $updated && 'closed' === $status ) {
+
+    error_log(
+        'FLIPNZEE: Auction was closed. Looking for winner.'
+    );
+
+    $winner = Flipnzee_Bid_Manager::determine_winner(
+    $auction_id
+);
+
+    error_log(
+        'FLIPNZEE: Winner = ' .
+        var_export( $winner, true )
+    );
+
+}
+
 		$message = $updated
 			? 'updated'
 			: 'error';

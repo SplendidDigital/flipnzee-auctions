@@ -300,7 +300,7 @@ if ( isset( $_GET['bid'] ) ) {
 
 </table>
 
-
+<?php if ( 'active' === $auction['status'] ) : ?>
 <?php if ( is_user_logged_in() && $highest_bidder ) : ?>
 
 	<?php if ( get_current_user_id() === (int) $highest_bidder->bidder_id ) : ?>
@@ -485,6 +485,30 @@ $minimum_bid =
 </p>
 
 <?php endif; ?>
+
+<?php else : ?>
+
+<div class="flipnzee-auction-ended">
+
+    <h3>🏆 Auction Closed</h3>
+
+    <?php if ( $highest_bidder ) : ?>
+
+        <p>
+            <strong>Winning Bid:</strong>
+            $<?php echo esc_html( $highest_bidder->bid_amount ); ?>
+        </p>
+
+    <?php else : ?>
+
+        <p>No bids were placed.</p>
+
+    <?php endif; ?>
+
+</div>
+
+<?php endif; ?>
+
 <p class="flipnzee-auction-actions">
 
 	<a

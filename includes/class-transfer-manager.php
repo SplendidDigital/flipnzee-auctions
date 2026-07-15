@@ -24,9 +24,23 @@ private static function get_table_name() {
 public static function create_transfer(
     $transaction_id
 ) {
+
+    error_log(
+        'FLIPNZEE: create_transfer() started. Transaction ID: ' .
+        $transaction_id
+    );
+
     global $wpdb;
 
     $table = self::get_table_name();
+
+    error_log(
+        'FLIPNZEE: Transfer table: ' .
+        $table
+    );    error_log(
+    'FLIPNZEE: Transfer table: ' .
+    $table
+);
 
     $exists = $wpdb->get_var(
 
@@ -97,6 +111,21 @@ public static function create_transfer(
 
     );
 
+    error_log(
+    'FLIPNZEE: insert result = ' .
+    var_export( $result, true )
+);
+
+error_log(
+    'FLIPNZEE: last error = ' .
+    $wpdb->last_error
+);
+
+error_log(
+    'FLIPNZEE: last query = ' .
+    $wpdb->last_query
+);
+
     return false !== $result;
 
 }
@@ -144,51 +173,60 @@ public static function get_transfer(
  *
  * @return bool
  */
+/**
+ * Update a single transfer status.
+ *
+ * @param int    $transaction_id Transaction ID.
+ * @param string $field          Status field.
+ * @param string $value          New value.
+ *
+ * @return bool
+ */
 public static function update_status(
-    $transaction_id,
-    $field,
-    $value
+	$transaction_id,
+	$field,
+	$value
 ) {
 
-    global $wpdb;
+	global $wpdb;
 
-    $allowed = array(
-        'payment',
-        'files',
-        'database',
-        'domain',
-        'buyer',
-    );
+	$allowed = array(
+		'payment_status',
+		'files_status',
+		'database_status',
+		'domain_status',
+		'buyer_status',
+	);
 
-    if ( ! in_array( $field, $allowed, true ) ) {
-        return false;
-    }
+	if ( ! in_array( $field, $allowed, true ) ) {
+		return false;
+	}
 
-    $table = self::get_table_name();
+	$table = self::get_table_name();
 
-    $result = $wpdb->update(
+	$result = $wpdb->update(
 
-        $table,
+		$table,
 
-        array(
-            $field => sanitize_text_field( $value ),
-        ),
+		array(
+			$field => sanitize_text_field( $value ),
+		),
 
-        array(
-            'transaction_id' => absint( $transaction_id ),
-        ),
+		array(
+			'transaction_id' => absint( $transaction_id ),
+		),
 
-        array(
-            '%s',
-        ),
+		array(
+			'%s',
+		),
 
-        array(
-            '%d',
-        )
+		array(
+			'%d',
+		)
 
-    );
+	);
 
-    return false !== $result;
+	return false !== $result;
 
 }
 
@@ -316,6 +354,33 @@ public static function update_transfer(
 	 *
 	 * @return array
 	 */
+    /**
+ * Get all transfers.
+ *
+ * @return array
+ */
+public static function get_all_transfers() {
+
+	global $wpdb;
+
+	$table = self::get_table_name();
+
+	$results = $wpdb->get_results(
+		"
+		SELECT *
+		FROM {$table}
+		ORDER BY id DESC
+		",
+		ARRAY_A
+	);
+
+	if ( ! $results ) {
+		return array();
+	}
+
+	return $results;
+
+}
 	public static function get_default_steps() {
 
 		return array(

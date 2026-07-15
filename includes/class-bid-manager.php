@@ -336,7 +336,7 @@ public static function determine_winner( $auction_id ) {
 	$winner
 );
 
-	return true;
+	return $winner;
 }
 
 }

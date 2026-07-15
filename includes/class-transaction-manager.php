@@ -38,6 +38,10 @@ public function create_transaction_from_auction(
 ) {
 
 	global $wpdb;
+	error_log(
+    'FLIPNZEE: create_transaction_from_auction() started. Auction ID: ' .
+    $auction_id
+);
     if ( class_exists( 'Flipnzee_Activity_Log' ) ) {
 
 	
@@ -59,6 +63,9 @@ public function create_transaction_from_auction(
 		'post_author',
 		$auction->listing_id
 	);
+	error_log(
+    'FLIPNZEE: About to call create_transaction()'
+);
 
 	$transaction_id = self::create_transaction(
 		array(
@@ -69,6 +76,10 @@ public function create_transaction_from_auction(
 			'winning_bid' => $winner->bid_amount,
 		)
 	);
+	error_log(
+    'FLIPNZEE: create_transaction() returned ID: ' .
+    var_export( $transaction_id, true )
+);
 
 	
 if ( $transaction_id ) {
@@ -126,8 +137,17 @@ if ( $existing_transaction ) {
 
 $transaction_id = $wpdb->insert_id;
 
-Flipnzee_Transfer_Manager::create_transfer(
+error_log(
+    'FLIPNZEE: Transaction created with ID: ' . $transaction_id
+);
+
+$result = Flipnzee_Transfer_Manager::create_transfer(
     $transaction_id
+);
+
+error_log(
+    'FLIPNZEE: create_transfer() returned: ' .
+    var_export( $result, true )
 );
 
 return $transaction_id;

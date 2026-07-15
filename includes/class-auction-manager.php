@@ -91,15 +91,17 @@ $result = $wpdb->insert(
 
 		return $wpdb->insert_id;
 	}
-	/**
+/**
  * Update an existing auction.
  *
- * @param int    $auction_id     Auction ID.
- * @param int    $listing_id     Listing ID.
- * @param float  $start_price    Start price.
- * @param float  $reserve_price  Reserve price.
- * @param float  $buy_now_price  Buy Now price.
- * @param string $status         Auction status.
+ * @param int    $auction_id
+ * @param int    $listing_id
+ * @param float  $start_price
+ * @param float  $reserve_price
+ * @param float  $buy_now_price
+ * @param string $status
+ * @param string $auction_start
+ * @param string $auction_end
  *
  * @return bool
  */
@@ -117,25 +119,6 @@ public static function update_auction(
     global $wpdb;
 
     $table = $wpdb->prefix . 'flipnzee_auctions';
-	
-
-    error_log( 'auction_start = ' . $auction_start );
-    error_log( 'auction_end = ' . $auction_end );
-
-    error_log(
-        print_r(
-            array(
-                'listing_id'    => $listing_id,
-                'start_price'   => $start_price,
-                'reserve_price' => $reserve_price,
-                'buy_now_price' => $buy_now_price,
-                'status'        => $status,
-                'auction_start' => $auction_start,
-                'auction_end'   => $auction_end,
-            ),
-            true
-        )
-    );
 
     $result = $wpdb->update(
         $table,
@@ -172,15 +155,6 @@ public static function update_auction(
 
     return false !== $result;
 }
-
-/**
- * Automatically close expired active auctions.
- *
- * Updates any auction that is still marked as active
- * but whose end date/time has already passed.
- *
- * @return int Number of auctions updated.
- */
 public static function update_expired_auctions() {
 
 	global $wpdb;
@@ -221,17 +195,29 @@ if ( $updated_count > 0 ) {
 			$updated_count
 		)
 	);
-	do_action(
-	'flipnzee_auction_winner_determined',
-	$auction,
-	$winner
-);
+
 	foreach ( $expired_auctions as $auction_id ) {
+		error_log(
+    'FLIPNZEE: Processing expired auction #' .
+    $auction_id
+);
 
-	Flipnzee_Bid_Manager::determine_winner(
-		(int) $auction_id
-	);
+error_log(
+    'FLIPNZEE: Winner = ' .
+    var_export( $winner, true )
+);
 
+    $winner = Flipnzee_Bid_Manager::determine_winner(
+        (int) $auction_id
+    );
+
+    if ( $winner ) {
+
+        error_log(
+            'FLIPNZEE: Scheduled auction closed. Winner determined.'
+        );
+
+    }
 }
 }
 /**
@@ -597,18 +583,7 @@ public static function close_expired_auctions() {
 	);
 	return (int) $result;
 
-	$wpdb->query(
-    $wpdb->prepare(
-        "UPDATE {$table}
-        SET status = %s
-        WHERE status = %s
-        AND auction_end IS NOT NULL
-        AND auction_end <= %s",
-        'closed',
-        'active',
-        $current_time
-    )
-);
+	
 }
 /**
  * Run scheduled maintenance.
