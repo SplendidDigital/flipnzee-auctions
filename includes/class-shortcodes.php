@@ -490,25 +490,61 @@ $minimum_bid =
 
 <div class="flipnzee-auction-ended">
 
+<?php
+
+$reserve_met = true;
+
+if (
+    ! empty( $auction['reserve_price'] ) &&
+    $auction['current_bid'] < $auction['reserve_price']
+) {
+    $reserve_met = false;
+}
+?>
+
+<?php if ( $reserve_met ) : ?>
+
     <h3>🏆 Auction Closed</h3>
 
-    <?php if ( $highest_bidder ) : ?>
+<?php else : ?>
 
-        <p>
-            <strong>Winning Bid:</strong>
-            $<?php echo esc_html( $highest_bidder->bid_amount ); ?>
-        </p>
+    <h3>🔒 Reserve Price Not Met</h3>
 
-    <?php else : ?>
+    <p>
+        The highest bid did not reach the seller's reserve price.
+        No winner has been declared.
+    </p>
 
-        <p>No bids were placed.</p>
+<?php endif; ?>
 
-    <?php endif; ?>
+<?php if ( $highest_bidder ) : ?>
+
+    <p>
+        <strong>
+            <?php echo $reserve_met ? 'Winning Bid:' : 'Highest Bid:'; ?>
+        </strong>
+
+        <?php
+  
+
+echo esc_html(
+    '$' . number_format_i18n(
+        (float) $auction['current_bid'],
+        2
+    )
+);
+        ?>
+    </p>
+
+<?php else : ?>
+
+    <p>No bids were placed.</p>
+
+<?php endif; ?>
 
 </div>
 
 <?php endif; ?>
-
 <p class="flipnzee-auction-actions">
 
 	<a
@@ -639,7 +675,7 @@ if ( has_post_thumbnail( $listing ) ) {
     echo esc_html(
         mysql2date(
             'F j, Y g:i A',
-            $auction->auction_end
+           $auction->auction_end
         )
     );
     ?>

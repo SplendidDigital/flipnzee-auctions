@@ -317,6 +317,9 @@ public static function determine_winner( $auction_id ) {
 			'%d',
 		)
 	);
+	if ( ! self::reserve_price_met( $auction_id, $winner ) ) {
+    return false;
+}
 
 	if ( class_exists( 'Flipnzee_Activity_Log' ) ) {
 
@@ -338,5 +341,133 @@ public static function determine_winner( $auction_id ) {
 
 	return $winner;
 }
+/**
+ * Check whether reserve price has been met.
+ *
+ * @param object $auction Auction object.
+ * @param object $winner Highest bid object.
+ *
+ * @return bool
+ */
+public static function reserve_price_met(
+    $auction,
+    $winner
+) {
 
+    if ( empty( $auction->reserve_price ) ) {
+        return true;
+    }
+
+	if ( ! self::reserve_price_met( $auction_id, $winner ) ) {
+
+    if ( class_exists( 'Flipnzee_Activity_Log' ) ) {
+
+        Flipnzee_Activity_Log::log(
+            'reserve_not_met',
+            $auction_id,
+            0,
+            sprintf(
+                'Highest bid %s did not reach reserve price.',
+                $winner->bid_amount
+            )
+        );
+    }
+
+    error_log(
+        'FLIPNZEE: Reserve price not met. No winner declared.'
+    );
+
+    return false;
+}
+
+    if ( ! $winner ) {
+        return false;
+    }
+
+	$auction = $wpdb->get_row(
+    $wpdb->prepare(
+        "SELECT reserve_price
+        FROM {$auction_table}
+        WHERE id = %d",
+        $auction_id
+    )
+);
+
+if (
+    $auction &&
+    (float) $auction->reserve_price > 0 &&
+    (float) $winner->bid_amount < (float) $auction->reserve_price
+) {
+
+    $wpdb->update(
+        $auction_table,
+        array(
+            'winner_user_id' => null,
+        ),
+        array(
+            'id' => $auction_id,
+        ),
+        array(
+            null,
+        ),
+        array(
+            '%d',
+        )
+    );
+
+    if ( class_exists( 'Flipnzee_Activity_Log' ) ) {
+
+        Flipnzee_Activity_Log::log(
+            'reserve_not_met',
+            $auction_id,
+            $winner->bidder_id,
+            sprintf(
+                'Highest bid %s did not meet reserve price %s',
+                $winner->bid_amount,
+                $auction->reserve_price
+            )
+        );
+    }
+
+    return false;
+}
+          
+    
+
+	$auction = $wpdb->get_row(
+    $wpdb->prepare(
+        "SELECT reserve_price
+        FROM {$auction_table}
+        WHERE id = %d",
+        $auction_id
+    )
+);
+
+if (
+    ! self::reserve_price_met(
+        $auction,
+        $winner
+    )
+) {
+
+    if ( class_exists( 'Flipnzee_Activity_Log' ) ) {
+
+        Flipnzee_Activity_Log::log(
+            'reserve_not_met',
+            $auction_id,
+            0,
+            sprintf(
+                'Highest bid %s did not meet reserve price %s.',
+                $winner->bid_amount,
+                $auction->reserve_price
+            )
+        );
+    }
+
+    return false;
+}
+
+    return (float) $winner->bid_amount >=
+        (float) $auction->reserve_price;
+}
 }

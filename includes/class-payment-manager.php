@@ -154,4 +154,19 @@ public static function save_payment_proof(
     );
 
 }
+
+/**
+ * Format a price for display.
+ *
+ * @param float $amount Price.
+ * @return string
+ */
+public static function format_price( $amount ) {
+
+    return '$' . number_format(
+        (float) $amount,
+        2
+    );
+}
+
 }

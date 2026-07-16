@@ -22,6 +22,12 @@ define( 'FLIPNZEE_DB_VERSION', '1.3.0' );
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+/**
+ * Number of days recently closed auctions remain visible.
+ */
+if ( ! defined( 'FLIPNZEE_AUCTION_HISTORY_DAYS' ) ) {
+    define( 'FLIPNZEE_AUCTION_HISTORY_DAYS', 10 );
+}
 
 /**
  * Plugin Constants

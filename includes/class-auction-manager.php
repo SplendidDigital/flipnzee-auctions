@@ -611,10 +611,18 @@ public static function get_active_auctions() {
 	return $wpdb->get_results(
 		"SELECT *
 		FROM {$table}
-		WHERE status IN ('active', 'closed')
-		ORDER BY auction_end ASC",
-		ARRAY_A
+		WHERE
+status = 'active'
+OR (
+    status = 'closed'
+    AND auction_end >= DATE_SUB(
+    NOW(),
+    INTERVAL " . FLIPNZEE_AUCTION_HISTORY_DAYS . " DAY
+)
+)
+ORDER BY auction_end DESC
+",
+ARRAY_A
 	);
 }
 }
-
