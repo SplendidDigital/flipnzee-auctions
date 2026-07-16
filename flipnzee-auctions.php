@@ -164,6 +164,11 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH .
     'admin/class-admin-transfer.php';
 
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-notification-manager.php';
+
+
+Flipnzee_Notification_Manager::init();
 
 
 
