@@ -1,3 +1,19 @@
+<p align="center">
+  <img src="images/banner.png" alt="Flipnzee Auctions Banner" width="100%">
+</p>
+
+<div align="center">
+
+### WordPress Auction Plugin for Digital Assets
+
+*A secure, extensible, and developer-friendly WordPress auction plugin built specifically for websites, domains, SaaS products, online businesses, and other digital assets.*
+
+</div>
+
+---
+
+Flipnzee Auctions is an open-source WordPress auction plugin built specifically for buying and selling digital assets...
+
 # Flipnzee Auctions
 
 ### WordPress Auction Plugin for Digital Assets
