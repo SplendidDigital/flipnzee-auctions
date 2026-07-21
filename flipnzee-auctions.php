@@ -17,8 +17,6 @@
  */
 define( 'FLIPNZEE_DB_VERSION', '1.3.0' );
 
-
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -81,7 +79,7 @@ if ( file_exists(
 }
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-payment-manager.php';
-require_once FLIPNZEE_AUCTION_PATH . 'includes/class-payment-page.php';
+
 
 if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-admin-payments.php' ) ) {
 
@@ -131,13 +129,10 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH . 
      'includes/class-watchlist-manager.php';
 
-	/**
- * Plugin Activation
- */
+
 /**
  * Plugin Activation
  */
-
 
 
 require_once FLIPNZEE_AUCTION_PATH .
@@ -235,6 +230,11 @@ register_activation_hook(
 //     __FILE__,
 //     'flipnzee_auction_activate'
 // );
+
+register_deactivation_hook(
+    __FILE__,
+    'flipnzee_auction_deactivate'
+);
 
 add_action(
 	'flipnzee_auction_maintenance',

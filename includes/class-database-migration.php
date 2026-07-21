@@ -21,40 +21,35 @@ class Flipnzee_Database_Migration {
 	 *
 	 * @return void
 	 */
-	public static function run() {	
-		$current_version = get_option( 'flipnzee_db_version', '1.0.0' );
+	public static function run() {
 
-    if ( version_compare( $current_version, '1.1.0', '<' ) ) {
+	$current_version = get_option(
+		'flipnzee_db_version',
+		'1.0.0'
+	);
 
-        error_log( 'FLIPNZEE RUN: Calling migrate_to_1_1_0()' );
-        self::migrate_to_1_1_0();
+	if ( version_compare( $current_version, '1.1.0', '<' ) ) {
 
-    }
+		error_log( 'FLIPNZEE RUN: migrate_to_1_1_0()' );
 
-    if ( version_compare( $current_version, '1.2.0', '<' ) ) {
+		self::migrate_to_1_1_0();
+	}
 
-        error_log( 'FLIPNZEE RUN: Calling migrate_to_1_2_0()' );
-        self::migrate_to_1_2_0();
+	if ( version_compare( $current_version, '1.2.0', '<' ) ) {
 
-    }
+		error_log( 'FLIPNZEE RUN: migrate_to_1_2_0()' );
+
+		self::migrate_to_1_2_0();
+	}
 
 	if ( version_compare( $current_version, '1.3.0', '<' ) ) {
 
-    error_log( 'FLIPNZEE RUN: Calling migrate_to_1_3_0()' );
-	error_log(
-    'METHOD EXISTS? ' .
-    ( method_exists( __CLASS__, 'migrate_to_1_3_0' ) ? 'YES' : 'NO' )
-);
+		error_log( 'FLIPNZEE RUN: migrate_to_1_3_0()' );
 
-error_log(
-    'CLASS METHODS: ' .
-    print_r( get_class_methods( __CLASS__ ), true )
-);
-    self::migrate_to_1_3_0();
+		self::migrate_to_1_3_0();
+	}
 
 }
-}
-
     /**
  * Check whether a database table exists.
  *
@@ -239,9 +234,9 @@ if ( ! self::column_exists( $table, 'payment_reference' ) ) {
         'VARCHAR(100) NULL'
     );
 
-    error_log(
-        'FLIPNZEE MIGRATION: Added payment_reference column.'
-    );
+   error_log(
+	"FLIPNZEE MIGRATION: Added {$index_name} index."
+);
 }
 
     update_option( 'flipnzee_db_version', '1.2.0' );
@@ -255,20 +250,89 @@ if ( ! self::column_exists( $table, 'payment_reference' ) ) {
  *
  * @return void
  */
+/**
+ * Database migration to version 1.3.0.
+ *
+ * Creates the External Providers table.
+ *
+ * @return void
+ */
 private static function migrate_to_1_3_0() {
 
-    error_log(
-        'FLIPNZEE MIGRATION: Running database migration to version 1.3.0'
-    );
+	error_log(
+		'FLIPNZEE MIGRATION: Running database migration to version 1.3.0'
+	);
 
-   Flipnzee_Auction_Database::create_tables();
+	// Create the External Providers table.
+	self::create_external_providers_table();
 
-    Flipnzee_Auction_Database::update_db_version();
+	// Update the stored database version.
+	update_option(
+		'flipnzee_db_version',
+		'1.3.0'
+	);
 
-    error_log(
-        'FLIPNZEE MIGRATION: Database version updated to 1.3.0'
-    );
-
+	error_log(
+		'FLIPNZEE MIGRATION: Database version updated to 1.3.0'
+	);
 }
 
+/**
+ * Create the External Providers table.
+ *
+ * @since 1.3.0
+ *
+ * @return void
+ */
+private static function create_external_providers_table() {
+
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'flipnzee_external_providers';
+
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE {$table_name} (
+
+		id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+
+		transaction_id BIGINT(20) UNSIGNED NOT NULL,
+
+		provider VARCHAR(50) NOT NULL,
+
+		provider_reference VARCHAR(255) DEFAULT '',
+
+		provider_url TEXT NULL,
+
+		status VARCHAR(30) NOT NULL DEFAULT 'pending',
+
+		started_at DATETIME NULL,
+
+		completed_at DATETIME NULL,
+
+		notes LONGTEXT NULL,
+
+		created_at DATETIME NOT NULL,
+
+		updated_at DATETIME NOT NULL,
+
+		PRIMARY KEY (id),
+
+		KEY transaction_id (transaction_id),
+
+		KEY provider (provider),
+
+		KEY status (status)
+
+	) {$charset_collate};";
+
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+	dbDelta( $sql );
+
+	error_log(
+		'FLIPNZEE MIGRATION: External providers table checked/created.'
+	);
+
+}
 }

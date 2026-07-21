@@ -32,6 +32,11 @@ $transaction = Flipnzee_Payment_Manager::get_transaction(
     $transaction_id
 );
 
+error_log(
+	'PAYMENT PAGE TRANSACTION: ' .
+	print_r( $transaction, true )
+);
+
 
 if ( ! $transaction ) {
     return '<p>Transaction not found.</p>';
@@ -231,9 +236,9 @@ return ob_get_clean();
 
         <?php
 
-        $status = strtolower(
-            $transaction['status']
-        );
+       $status = strtolower(
+    $transaction->status
+);
 
         $class = 'flipnzee-status-pending';
 

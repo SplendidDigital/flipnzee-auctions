@@ -333,10 +333,17 @@ public static function determine_winner( $auction_id ) {
 			)
 		);
 	}
+	error_log(
+    'FLIPNZEE DEBUG: About to fire flipnzee_auction_winner_determined'
+);
 	do_action(
 	'flipnzee_auction_winner_determined',
 	$auction_id,
 	$winner
+);
+
+error_log(
+    'FLIPNZEE DEBUG: Finished flipnzee_auction_winner_determined'
 );
 
 	return $winner;

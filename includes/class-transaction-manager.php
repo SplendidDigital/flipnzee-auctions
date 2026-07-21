@@ -141,6 +141,19 @@ error_log(
     'FLIPNZEE: Transaction created with ID: ' . $transaction_id
 );
 
+Flipnzee_External_Provider_Manager::create_provider(
+	array(
+		'transaction_id' => $transaction_id,
+		'provider'       => 'escrow.com',
+		'status'         => 'pending',
+	)
+);
+
+error_log(
+	'FLIPNZEE: External provider record created for transaction ID: ' .
+	$transaction_id
+);
+
 $result = Flipnzee_Transfer_Manager::create_transfer(
     $transaction_id
 );
