@@ -205,11 +205,208 @@ if ( isset( $_POST['flipnzee_continue_payment'] ) ) {
 <?php endif; ?>
 
 <?php
-self::render_transaction_summary( $transaction );
-self::render_gateway_selector( $gateways );
+/*
+|--------------------------------------------------------------------------
+| Transaction Summary
+|--------------------------------------------------------------------------
+*/
+
+self::render_transaction_summary(
+    $transaction
+);
+
+/*
+|--------------------------------------------------------------------------
+| Payment State
+|--------------------------------------------------------------------------
+*/
+
+self::render_payment_state(
+    $transaction,
+    $gateways
+);
 
 return ob_get_clean();
     }
+
+    /**
+ * Render the payment state.
+ *
+ * @param object $transaction Transaction.
+ * @param array  $gateways    Available gateways.
+ *
+ * @return void
+ */
+private static function render_payment_state(
+    $transaction,
+    $gateways
+) {
+
+    switch ( strtolower( $transaction->payment_status ) ) {
+
+        case 'submitted':
+
+            self::render_submitted_state(
+                $transaction
+            );
+
+            break;
+
+        case 'verified':
+
+            self::render_verified_state(
+                $transaction
+            );
+
+            break;
+
+        case 'completed':
+
+            self::render_completed_state(
+                $transaction
+            );
+
+            break;
+
+        case 'pending':
+
+        default:
+
+            self::render_pending_state(
+                $transaction,
+                $gateways
+            );
+
+            break;
+    }
+}
+
+/**
+ * Render pending payment state.
+ *
+ * @param object $transaction Transaction.
+ * @param array  $gateways    Available gateways.
+ *
+ * @return void
+ */
+private static function render_pending_state(
+    $transaction,
+    $gateways
+) {
+
+    self::render_gateway_selector(
+        $gateways
+    );
+
+}
+
+/**
+ * Render submitted payment state.
+ *
+ * @param object $transaction Transaction.
+ *
+ * @return void
+ */
+private static function render_submitted_state(
+    $transaction
+) {
+?>
+
+<div class="notice notice-success">
+
+    <h3>
+
+        Payment Submitted
+
+    </h3>
+
+    <p>
+
+        Your payment proof has been received.
+
+    </p>
+
+    <p>
+
+        Our team will verify your payment before
+        ownership transfer begins.
+
+    </p>
+
+</div>
+
+<?php
+}
+
+/**
+ * Render verified payment state.
+ *
+ * @param object $transaction Transaction.
+ *
+ * @return void
+ */
+private static function render_verified_state(
+    $transaction
+) {
+?>
+
+<div class="notice notice-info">
+
+    <h3>
+
+        Payment Verified
+
+    </h3>
+
+    <p>
+
+        Your payment has been verified successfully.
+
+    </p>
+
+    <p>
+
+        Ownership transfer has started.
+
+    </p>
+
+</div>
+
+<?php
+}
+
+/**
+ * Render completed payment state.
+ *
+ * @param object $transaction Transaction.
+ *
+ * @return void
+ */
+private static function render_completed_state(
+    $transaction
+) {
+?>
+
+<div class="notice notice-success">
+
+    <h3>
+
+        Transaction Completed
+
+    </h3>
+
+    <p>
+
+        Ownership has been transferred successfully.
+
+    </p>
+
+</div>
+
+<?php
+}
+
+
 
     private static function render_transaction_summary( $transaction ) {
 ?>
