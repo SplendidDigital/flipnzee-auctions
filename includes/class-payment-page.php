@@ -1,6 +1,8 @@
 <?php
 /**
  * Buyer Payment Page
+ *
+ * @package Flipnzee_Auctions
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -9,6 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Flipnzee_Payment_Page {
 
+	/**
+	 * Render buyer payment page.
+	 *
+	 * @return string
+	 */
 	public static function render() {
 
 		if ( ! is_user_logged_in() ) {
@@ -17,690 +24,747 @@ class Flipnzee_Payment_Page {
 
 		ob_start();
 
-$transaction_id = isset( $_GET['transaction_id'] )
-	? absint( $_GET['transaction_id'] )
-	: 0;
-
-if ( ! $transaction_id ) {
-	?>
-	<p>Invalid transaction.</p>
-	<?php
-	return ob_get_clean();
-}
-
-$transaction = Flipnzee_Payment_Manager::get_transaction(
-    $transaction_id
-);
-
-error_log(
-	'PAYMENT PAGE TRANSACTION: ' .
-	print_r( $transaction, true )
-);
-
-
-if ( ! $transaction ) {
-    return '<p>Transaction not found.</p>';
-}
-
-if ( ! Flipnzee_Payment_Manager::can_pay( $transaction ) ) {
-    return '<p>This transaction is no longer available for payment.</p>';
-}
-
-$gateways = Flipnzee_Payment_Manager::get_available_gateways();
-$payment_completed = false;
-$payment_proof_uploaded = false;
-$payment_proof_attachment_id = 0;
-$payment_proof_already_uploaded =
-    (
-        $transaction->payment_status === 'submitted'
-        &&
-        ! empty( $transaction->payment_proof_id )
-    );
-
-if ( isset( $_POST['flipnzee_payment_completed'] ) ) {
-
-    $payment_completed = true;
-
-}
-
-if (
-    isset( $_POST['flipnzee_upload_payment_proof'] ) &&
-    isset( $_FILES['flipnzee_payment_proof'] ) &&
-    ! empty( $_FILES['flipnzee_payment_proof']['name'] )
-) {
-	if (
-    ! isset( $_POST['flipnzee_upload_nonce'] ) ||
-    ! wp_verify_nonce(
-        sanitize_text_field(
-            wp_unslash( $_POST['flipnzee_upload_nonce'] )
-        ),
-        'flipnzee_upload_proof'
-    )
-) {
-    return '<p>Security check failed.</p>';
-}
-
-    require_once ABSPATH . 'wp-admin/includes/file.php';
-    require_once ABSPATH . 'wp-admin/includes/media.php';
-    require_once ABSPATH . 'wp-admin/includes/image.php';
-
-    $attachment_id = media_handle_upload(
-        'flipnzee_payment_proof',
-        0
-    );
-
-   if ( ! is_wp_error( $attachment_id ) ) {
-
-    $payment_proof_uploaded      = true;
-    $payment_proof_attachment_id = (int) $attachment_id;
-
-    Flipnzee_Payment_Manager::save_payment_proof(
-        $transaction->id,
-        $payment_proof_attachment_id
-    );
-	$transaction = Flipnzee_Payment_Manager::get_transaction(
-    $transaction->id
-);
-
-}
-}
-if ( isset( $_POST['flipnzee_continue_payment'] ) ) {
-
-    if (
-        ! isset( $_POST['flipnzee_payment_nonce'] ) ||
-        ! wp_verify_nonce(
-            sanitize_text_field(
-                wp_unslash( $_POST['flipnzee_payment_nonce'] )
-            ),
-            'flipnzee_payment_action'
-        )
-    ) {
-        return '<p>Security check failed.</p>';
-    }
-
-    $selected_gateway = '';
+		$transaction_id = isset( $_GET['transaction_id'] )
+			? absint( $_GET['transaction_id'] )
+			: 0;
 
-    if ( isset( $_POST['payment_gateway'] ) ) {
+		if ( ! $transaction_id ) {
+			return '<p>Invalid transaction.</p>';
+		}
 
-        $selected_gateway = sanitize_text_field(
-            wp_unslash( $_POST['payment_gateway'] )
-        );
+		$transaction = Flipnzee_Payment_Manager::get_transaction(
+			$transaction_id
+		);
 
-        if ( ! isset( $gateways[ $selected_gateway ] ) ) {
-            return '<p>Invalid payment gateway selected.</p>';
-        }
+		if ( ! $transaction ) {
+			return '<p>Transaction not found.</p>';
+		}
 
-        switch ( $selected_gateway ) {
+		if ( ! Flipnzee_Payment_Manager::can_pay( $transaction ) ) {
+			return '<p>This transaction is no longer available for payment.</p>';
+		}
 
-           case 'manual':
+		$gateways = Flipnzee_Payment_Manager::get_available_gateways();
 
-    self::render_manual_payment( $transaction );
+		$payment_completed = false;
 
-    break;
+		$payment_proof_uploaded = false;
 
-            case 'escrow':
-                ?>
-                <div class="notice notice-info">
-                    <p>
-                        Escrow.com integration will be available in a future release.
-                    </p>
-                </div>
-                <?php
-                break;
+		/*
+		|--------------------------------------------------------------------------
+		| Upload payment proof
+		|--------------------------------------------------------------------------
+		*/
 
-            case 'stripe':
-            case 'paypal':
-            case 'razorpay':
-            case 'crypto':
-                ?>
-                <div class="notice notice-warning">
-                    <p>
-                        This payment gateway is not yet available.
-                    </p>
-                </div>
-                <?php
-                break;
+		if (
+			isset( $_POST['flipnzee_upload_payment_proof'] ) &&
+			isset( $_FILES['flipnzee_payment_proof'] ) &&
+			! empty( $_FILES['flipnzee_payment_proof']['name'] )
+		) {
 
-            default:
-                ?>
-                <div class="notice notice-error">
-                    <p>Unknown payment gateway.</p>
-                </div>
-                <?php
-                break;
-        }
-    }
-}
-?>
-<?php if ( $payment_completed ) : ?>
+			if (
+				! isset( $_POST['flipnzee_upload_nonce'] ) ||
+				! wp_verify_nonce(
+					sanitize_text_field(
+						wp_unslash(
+							$_POST['flipnzee_upload_nonce']
+						)
+					),
+					'flipnzee_upload_proof'
+				)
+			) {
+				return '<p>Security check failed.</p>';
+			}
 
-<div class="notice notice-success">
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
 
-    <p>
+			$attachment_id = media_handle_upload(
+				'flipnzee_payment_proof',
+				0
+			);
 
-        <strong>Payment Submitted.</strong>
+			if ( ! is_wp_error( $attachment_id ) ) {
 
-        Your payment has been recorded and is awaiting verification.
+				Flipnzee_Payment_Manager::save_payment_proof(
+					$transaction->id,
+					(int) $attachment_id
+				);
 
-    </p>
+				$payment_proof_uploaded = true;
 
-</div>
+				$transaction = Flipnzee_Payment_Manager::get_transaction(
+					$transaction->id
+				);
+			}
+		}
 
-<?php endif; ?>
+		/*
+		|--------------------------------------------------------------------------
+		| Handle payment method selection
+		|--------------------------------------------------------------------------
+		*/
 
-<?php if ( $payment_proof_uploaded ) : ?>
+		self::handle_payment_submission(
+			$transaction,
+			$gateways
+		);
 
-<div class="notice notice-success">
+		if ( isset( $_POST['flipnzee_payment_completed'] ) ) {
 
-    <p>
+			$payment_completed = true;
 
-        <strong>Payment proof detected.</strong>
+		}
 
-        The uploaded file has been received and will be processed in the next step.
+		if ( $payment_completed ) :
+			?>
 
-    </p>
+			<div class="notice notice-success">
 
-</div>
+				<p>
 
-<?php endif; ?>
+					<strong>Payment Submitted.</strong>
 
-<?php
-/*
-|--------------------------------------------------------------------------
-| Transaction Summary
-|--------------------------------------------------------------------------
-*/
+					Your payment has been recorded.
 
-self::render_transaction_summary(
-    $transaction
-);
+				</p>
 
-/*
-|--------------------------------------------------------------------------
-| Payment State
-|--------------------------------------------------------------------------
-*/
+			</div>
 
-self::render_payment_state(
-    $transaction,
-    $gateways
-);
+			<?php
+		endif;
 
-return ob_get_clean();
-    }
+		if ( $payment_proof_uploaded ) :
+			?>
 
-    /**
- * Render the payment state.
- *
- * @param object $transaction Transaction.
- * @param array  $gateways    Available gateways.
- *
- * @return void
- */
-private static function render_payment_state(
-    $transaction,
-    $gateways
-) {
+			<div class="notice notice-success">
 
-    switch ( strtolower( $transaction->payment_status ) ) {
+				<p>
 
-        case 'submitted':
+					<strong>Payment proof uploaded successfully.</strong>
 
-            self::render_submitted_state(
-                $transaction
-            );
+				</p>
 
-            break;
+			</div>
 
-        case 'verified':
+			<?php
+		endif;
 
-            self::render_verified_state(
-                $transaction
-            );
+		self::render_transaction_summary(
+			$transaction
+		);
 
-            break;
+		self::render_payment_state(
+			$transaction,
+			$gateways
+		);
 
-        case 'completed':
+		return ob_get_clean();
 
-            self::render_completed_state(
-                $transaction
-            );
+	}
 
-            break;
+	/**
+	 * Handle payment submission.
+	 *
+	 * @param object $transaction Transaction.
+	 * @param array  $gateways Available gateways.
+	 *
+	 * @return void
+	 */
+	private static function handle_payment_submission(
+		$transaction,
+		$gateways
+	) {
 
-        case 'pending':
+		if ( ! isset( $_POST['flipnzee_continue_payment'] ) ) {
+			return;
+		}
 
-        default:
+		if (
+			! isset( $_POST['flipnzee_payment_nonce'] ) ||
+			! wp_verify_nonce(
+				sanitize_text_field(
+					wp_unslash(
+						$_POST['flipnzee_payment_nonce']
+					)
+				),
+				'flipnzee_payment_action'
+			)
+		) {
 
-            self::render_pending_state(
-                $transaction,
-                $gateways
-            );
+			echo '<p>Security check failed.</p>';
 
-            break;
-    }
-}
+			return;
 
-/**
- * Render pending payment state.
- *
- * @param object $transaction Transaction.
- * @param array  $gateways    Available gateways.
- *
- * @return void
- */
-private static function render_pending_state(
-    $transaction,
-    $gateways
-) {
+		}
 
-    self::render_gateway_selector(
-        $gateways
-    );
+		$gateway = '';
 
-}
+		if ( isset( $_POST['payment_gateway'] ) ) {
 
-/**
- * Render submitted payment state.
- *
- * @param object $transaction Transaction.
- *
- * @return void
- */
-private static function render_submitted_state(
-    $transaction
-) {
-?>
+			$gateway = sanitize_text_field(
+				wp_unslash(
+					$_POST['payment_gateway']
+				)
+			);
 
-<div class="notice notice-success">
+		}
 
-    <h3>
+		if ( ! isset( $gateways[ $gateway ] ) ) {
 
-        Payment Submitted
+			echo '<p>Invalid payment gateway selected.</p>';
 
-    </h3>
+			return;
 
-    <p>
+		}
 
-        Your payment proof has been received.
+		switch ( $gateway ) {
 
-    </p>
+			case 'manual':
 
-    <p>
+				self::render_manual_payment(
+					$transaction
+				);
 
-        Our team will verify your payment before
-        ownership transfer begins.
+				break;
 
-    </p>
+			case 'escrow':
 
-</div>
+				?>
 
-<?php
-}
+				<div class="notice notice-info">
 
-/**
- * Render verified payment state.
- *
- * @param object $transaction Transaction.
- *
- * @return void
- */
-private static function render_verified_state(
-    $transaction
-) {
-?>
+					<p>
 
-<div class="notice notice-info">
+						Escrow integration will be available in a future lesson.
 
-    <h3>
+					</p>
 
-        Payment Verified
+				</div>
 
-    </h3>
+				<?php
 
-    <p>
+				break;
 
-        Your payment has been verified successfully.
+			default:
 
-    </p>
+				?>
 
-    <p>
+				<div class="notice notice-warning">
 
-        Ownership transfer has started.
+					<p>
 
-    </p>
+						This payment gateway is not yet available.
 
-</div>
+					</p>
 
-<?php
-}
+				</div>
 
-/**
- * Render completed payment state.
- *
- * @param object $transaction Transaction.
- *
- * @return void
- */
-private static function render_completed_state(
-    $transaction
-) {
-?>
+				<?php
 
-<div class="notice notice-success">
+				break;
 
-    <h3>
+		}
 
-        Transaction Completed
+	}
 
-    </h3>
+	/**
+	 * Render payment workflow.
+	 *
+	 * @param object $transaction Transaction.
+	 * @param array  $gateways Available gateways.
+	 *
+	 * @return void
+	 */
+	private static function render_payment_state(
+		$transaction,
+		$gateways
+	) {
 
-    <p>
+		switch ( strtolower( $transaction->payment_status ) ) {
 
-        Ownership has been transferred successfully.
+			case 'submitted':
 
-    </p>
+				self::render_submitted_state(
+					$transaction
+				);
 
-</div>
+				break;
 
-<?php
-}
+			case 'verified':
 
+				self::render_verified_state(
+					$transaction
+				);
 
+				break;
 
-    private static function render_transaction_summary( $transaction ) {
-?>
+			case 'completed':
 
-<h2>Payment</h2>
+				self::render_completed_state(
+					$transaction
+				);
 
-<table class="widefat striped">
+				break;
 
-<tr>
-    <th>Transaction ID</th>
-    <td><?php echo esc_html( $transaction->id ); ?></td>
-</tr>
+			case 'pending':
+			default:
 
-<tr>
-    <th>Winning Bid</th>
-    <td><?php echo esc_html( number_format_i18n( $transaction->winning_bid, 2 ) ); ?></td>
-</tr>
+				self::render_pending_state(
+					$transaction,
+					$gateways
+				);
 
-<tr>
+				break;
 
-    <th>Status</th>
+		}
 
-    <td>
+	}
 
-        <?php
+    	/**
+	 * Render pending payment state.
+	 *
+	 * @param object $transaction Transaction.
+	 * @param array  $gateways    Available gateways.
+	 *
+	 * @return void
+	 */
+	private static function render_pending_state(
+		$transaction,
+		$gateways
+	) {
 
-       $status = strtolower(
-    $transaction->status
-);
+		self::render_gateway_selector(
+			$gateways
+		);
 
-        $class = 'flipnzee-status-pending';
+	}
 
-        if ( 'paid' === $status ) {
+	/**
+	 * Render submitted state.
+	 *
+	 * @param object $transaction Transaction.
+	 *
+	 * @return void
+	 */
+	private static function render_submitted_state(
+		$transaction
+	) {
+		?>
 
-            $class = 'flipnzee-status-paid';
+		<div class="notice notice-success">
 
-        } elseif ( 'completed' === $status ) {
+			<h3>Payment Submitted</h3>
 
-            $class = 'flipnzee-status-completed';
+			<p>
 
-        }
+				Your payment proof has been received.
 
-        ?>
+			</p>
 
-        <span class="<?php echo esc_attr( $class ); ?>">
+			<p>
 
-            <?php
-            echo esc_html(
-                ucfirst( $status )
-            );
-            ?>
+				Our team is verifying your payment before
+				starting the ownership transfer.
 
-        </span>
+			</p>
 
-    </td>
+		</div>
 
-</tr>
+		<?php
+	}
 
-<tr>
-    <th>Payment Status</th>
-    <td><?php echo esc_html( ucfirst( $transaction->payment_status ) ); ?></td>
-</tr>
+	/**
+	 * Render verified state.
+	 *
+	 * @param object $transaction Transaction.
+	 *
+	 * @return void
+	 */
+	private static function render_verified_state(
+		$transaction
+	) {
+		?>
 
-<tr>
-    <th>Payment Gateway</th>
-    <td>
-        <?php
-        echo esc_html(
-            Flipnzee_Payment_Manager::get_gateway_name( $transaction )
-        );
-        ?>
-    </td>
-</tr>
+		<div class="notice notice-info">
 
-</table>
+			<h3>Payment Verified</h3>
 
-<?php
-    }
-	private static function render_gateway_selector( $gateways ) {
-?>
+			<p>
 
-<form
-    method="post"
-    enctype="multipart/form-data"
->
+				Your payment has been verified successfully.
 
-<?php
-wp_nonce_field(
-    'flipnzee_payment_action',
-    'flipnzee_payment_nonce'
-);
-?>
+			</p>
 
-<h3>Select Payment Method</h3>
+			<p>
 
-<div class="flipnzee-payment-gateways">
+				Ownership transfer has started.
 
-<?php foreach ( $gateways as $gateway_id => $gateway ) : ?>
+			</p>
 
-<p>
+		</div>
 
-<label>
+		<?php
+	}
 
-<input
-    type="radio"
-    name="payment_gateway"
-    value="<?php echo esc_attr( $gateway_id ); ?>"
-    <?php checked( $gateway['enabled'] ); ?>
-    <?php disabled( ! $gateway['enabled'] ); ?>
->
+	/**
+	 * Render completed state.
+	 *
+	 * @param object $transaction Transaction.
+	 *
+	 * @return void
+	 */
+	private static function render_completed_state(
+		$transaction
+	) {
+		?>
 
-<?php echo esc_html( $gateway['label'] ); ?>
+		<div class="notice notice-success">
 
-<?php if ( ! $gateway['enabled'] ) : ?>
+			<h3>Transaction Completed</h3>
 
-<em>(Coming Soon)</em>
+			<p>
 
-<?php endif; ?>
+				Ownership has been transferred successfully.
 
-</label>
+			</p>
 
-</p>
+		</div>
 
-<?php endforeach; ?>
+		<?php
+	}
 
-</div>
+	/**
+	 * Render transaction summary.
+	 *
+	 * @param object $transaction Transaction.
+	 *
+	 * @return void
+	 */
+	private static function render_transaction_summary(
+		$transaction
+	) {
+		?>
 
-<p class="flipnzee-payment-actions">
+		<h2>Payment</h2>
 
-<button
-    type="submit"
-    name="flipnzee_payment_completed"
-    class="button"
->
-I've Completed Payment
-</button>
+		<table class="widefat striped">
 
-<button
-    type="submit"
-    name="flipnzee_continue_payment"
-    class="button button-primary"
->
-Continue to Payment
-</button>
+			<tr>
+				<th>Transaction ID</th>
+				<td><?php echo esc_html( $transaction->id ); ?></td>
+			</tr>
 
-</p>
+			<tr>
+				<th>Winning Bid</th>
+				<td>
+					<?php
+					echo esc_html(
+						number_format_i18n(
+							$transaction->winning_bid,
+							2
+						)
+					);
+					?>
+				</td>
+			</tr>
 
-</form>
+			<tr>
+				<th>Status</th>
 
-<?php
-}
+				<td>
 
-private static function render_manual_payment( $transaction ) {
-?>
+					<?php
 
-<div class="notice notice-success">
+					$status = strtolower(
+						$transaction->status
+					);
 
-    <p><strong>Manual Payment Selected</strong></p>
+					$class = 'flipnzee-status-pending';
 
-    <p>Please complete your payment using the instructions below.</p>
+					if ( 'paid' === $status ) {
 
-</div>
+						$class = 'flipnzee-status-paid';
 
-<div class="flipnzee-manual-payment">
+					} elseif ( 'completed' === $status ) {
 
-<h3>Payment Instructions</h3>
+						$class = 'flipnzee-status-completed';
 
-<p>Thank you for choosing Manual Payment.</p>
+					}
 
-<p>Please use the transaction reference below when sending your payment.</p>
+					?>
 
-<table class="widefat striped">
+					<span class="<?php echo esc_attr( $class ); ?>">
 
-<tr>
-    <th>Reference Number</th>
-    <td>
-        <?php
-        echo esc_html(
-            'FLIP-' . str_pad(
-                $transaction->id,
-                6,
-                '0',
-                STR_PAD_LEFT
-            )
-        );
-        ?>
-    </td>
-</tr>
+						<?php
+						echo esc_html(
+							ucfirst( $status )
+						);
+						?>
 
-<tr>
-    <th>Amount</th>
-    <td>
-        <?php
-        echo esc_html(
-            number_format_i18n(
-                $transaction->winning_bid,
-                2
-            )
-        );
-        ?>
-    </td>
-</tr>
+					</span>
 
-<tr>
-    <th>Status</th>
-    <td>Awaiting Payment</td>
-</tr>
+				</td>
 
-</table>
+			</tr>
 
-<h4>Important</h4>
+			<tr>
+				<th>Payment Status</th>
 
-<ul>
+				<td>
 
-<li>Include the reference number with your payment.</li>
+					<?php
+					echo esc_html(
+						ucfirst(
+							$transaction->payment_status
+						)
+					);
+					?>
 
-<li>Keep proof of payment for verification.</li>
+				</td>
 
-<li>Your transaction will be reviewed before ownership transfer.</li>
+			</tr>
 
-</ul>
-<?php if ( empty( $transaction->payment_proof_id ) ) : ?>
-<h3>Upload Payment Proof</h3>
+			<tr>
 
-<p>
-After completing your payment, upload your receipt or screenshot below.
-</p>
+				<th>Payment Gateway</th>
 
-<form
-    method="post"
-    enctype="multipart/form-data"
->
+				<td>
 
-<?php
-wp_nonce_field(
-    'flipnzee_upload_proof',
-    'flipnzee_upload_nonce'
-);
-?>
+					<?php
+					echo esc_html(
+						Flipnzee_Payment_Manager::get_gateway_name(
+							$transaction
+						)
+					);
+					?>
 
-<input
-    type="hidden"
-    name="transaction_id"
-    value="<?php echo esc_attr( $transaction->id ); ?>"
->
+				</td>
 
-<p>
+			</tr>
 
-<input
-    type="file"
-    name="flipnzee_payment_proof"
-    accept=".jpg,.jpeg,.png,.pdf"
-    required
->
+		</table>
 
-</p>
+		<?php
+	}
 
-<p class="description">
+	/**
+	 * Render gateway selector.
+	 *
+	 * @param array $gateways Gateways.
+	 *
+	 * @return void
+	 */
+	private static function render_gateway_selector(
+		$gateways
+	) {
+		?>
 
-Supported formats:
-JPG, JPEG, PNG and PDF.
+		<form
+			method="post"
+			enctype="multipart/form-data"
+		>
 
-</p>
+			<?php
+			wp_nonce_field(
+				'flipnzee_payment_action',
+				'flipnzee_payment_nonce'
+			);
+			?>
 
-<p>
+			<h3>Select Payment Method</h3>
 
-<button
-    type="submit"
-    name="flipnzee_upload_payment_proof"
-    class="button button-primary"
->
-Upload Payment Proof
-</button>
+			<div class="flipnzee-payment-gateways">
 
-</p>
+				<?php foreach ( $gateways as $gateway_id => $gateway ) : ?>
 
-</form>
-<?php else : ?>
+					<p>
 
-<div class="notice notice-success">
+						<label>
 
-    <p>
+							<input
+								type="radio"
+								name="payment_gateway"
+								value="<?php echo esc_attr( $gateway_id ); ?>"
+								<?php checked( 'manual' === $gateway_id ); ?>
+								<?php disabled( 'manual' !== $gateway_id ); ?>
+							>
 
-        <strong>Payment Proof Already Submitted.</strong>
+							<?php echo esc_html( $gateway['label'] ); ?>
 
-        Your payment proof has already been uploaded and is awaiting verification by the Flipnzee team.
+							<?php if ( 'manual' !== $gateway_id ) : ?>
 
-    </p>
+								<em>(Coming Soon)</em>
 
-</div>
+							<?php endif; ?>
 
-<?php endif; ?>
+						</label>
 
-</div>
-<?php
-}
+					</p>
+
+				<?php endforeach; ?>
+
+			</div>
+
+			<p class="flipnzee-payment-actions">
+
+				<button
+					type="submit"
+					name="flipnzee_continue_payment"
+					class="button button-primary"
+				>
+
+					View Payment Instructions
+
+				</button>
+
+			</p>
+
+		</form>
+
+		<?php
+	}
+
+	/**
+	 * Render manual payment.
+	 *
+	 * @param object $transaction Transaction.
+	 *
+	 * @return void
+	 */
+	private static function render_manual_payment(
+		$transaction
+	) {
+
+		if ( ! empty( $transaction->payment_proof_id ) ) {
+
+			self::render_submitted_state(
+				$transaction
+			);
+
+			return;
+
+		}
+
+		?>
+
+		<div class="notice notice-success">
+
+			<p>
+
+				<strong>Manual Payment Selected</strong>
+
+			</p>
+
+			<p>
+
+				Please complete your payment using the
+				instructions below.
+
+			</p>
+
+		</div>
+
+		<div class="flipnzee-manual-payment">
+
+			<h3>Payment Instructions</h3>
+
+			<table class="widefat striped">
+
+				<tr>
+
+					<th>Reference Number</th>
+
+					<td>
+
+						<?php
+						echo esc_html(
+							'FLIP-' .
+							str_pad(
+								$transaction->id,
+								6,
+								'0',
+								STR_PAD_LEFT
+							)
+						);
+						?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>Amount</th>
+
+					<td>
+
+						<?php
+						echo esc_html(
+							number_format_i18n(
+								$transaction->winning_bid,
+								2
+							)
+						);
+						?>
+
+					</td>
+
+				</tr>
+
+			</table>
+
+			<h3>Upload Payment Proof</h3>
+
+			<form
+				method="post"
+				enctype="multipart/form-data"
+			>
+
+				<?php
+				wp_nonce_field(
+					'flipnzee_upload_proof',
+					'flipnzee_upload_nonce'
+				);
+				?>
+
+				<input
+					type="hidden"
+					name="transaction_id"
+					value="<?php echo esc_attr( $transaction->id ); ?>"
+				>
+
+				<p>
+
+					<input
+						type="file"
+						name="flipnzee_payment_proof"
+						accept=".jpg,.jpeg,.png,.pdf"
+						required
+					>
+
+				</p>
+
+				<p>
+
+					<button
+						type="submit"
+						name="flipnzee_upload_payment_proof"
+						class="button button-primary"
+					>
+
+						Upload Payment Proof
+
+					</button>
+
+				</p>
+
+			</form>
+
+		</div>
+
+		<?php
+	}
+
 }
