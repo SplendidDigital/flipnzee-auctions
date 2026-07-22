@@ -64,10 +64,25 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-activity-log.php' ) ) 
 /**
  * Load Auction Manager
  */
-if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-auction-manager.php' ) ) {
-	require_once FLIPNZEE_AUCTION_PATH . 'includes/class-auction-manager.php';
-	}
-	/**
+if ( file_exists(
+    FLIPNZEE_AUCTION_PATH . 'includes/class-auction-manager.php'
+) ) {
+
+    require_once FLIPNZEE_AUCTION_PATH .
+        'includes/class-auction-manager.php';
+}
+
+error_log(
+    'Auction Manager Class Exists? ' .
+    (
+        class_exists(
+            'Flipnzee_Auction_Manager',
+            false
+        )
+            ? 'YES'
+            : 'NO'
+    )
+);	/**
  * Load Bid Manager
  */
 if ( file_exists(
@@ -79,6 +94,10 @@ if ( file_exists(
 }
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-payment-manager.php';
+
+	if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-external-provider-manager.php' ) ) {
+	require_once FLIPNZEE_AUCTION_PATH . 'includes/class-external-provider-manager.php';
+}
 
 
 if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-admin-payments.php' ) ) {
