@@ -22,6 +22,7 @@ class Flipnzee_Bid_Manager {
 ) {
 
 	global $wpdb;
+	error_log( 'FLIPNZEE: place_bid() START' );
 
 	$bid_table = $wpdb->prefix . 'flipnzee_bids';
 	$auction_table = $wpdb->prefix . 'flipnzee_auctions';
@@ -99,6 +100,9 @@ if ( $bid_amount < $minimum_allowed_bid ) {
 	/*
 	 * Save bid.
 	 */
+	error_log(
+    'FLIPNZEE: About to insert bid ' . $bid_amount
+);
 	$result = $wpdb->insert(
 		$bid_table,
 		array(
@@ -116,6 +120,10 @@ if ( $bid_amount < $minimum_allowed_bid ) {
 	if ( false === $result ) {
 		return false;
 	}
+
+	error_log(
+    'FLIPNZEE: Bid inserted successfully'
+);
 
 	/*
 	 * Update current bid.
@@ -135,6 +143,24 @@ $wpdb->update(
 	array(
 		'%d',	)
 );
+
+/*
+ * Buy Now:
+ * Close the auction immediately if the
+ * bid meets or exceeds the Buy Now price.
+ */
+if (
+	! empty( $auction->buy_now_price ) &&
+	(float) $auction->buy_now_price > 0 &&
+	(float) $bid_amount >= (float) $auction->buy_now_price
+) {
+
+	error_log(
+		'FLIPNZEE: Buy Now triggered for auction ' .
+		$auction_id
+	);
+
+}
 
 /*
  * Anti-sniping:
@@ -392,12 +418,13 @@ public static function reserve_price_met(
     }
 
 	$auction = $wpdb->get_row(
-    $wpdb->prepare(
-        "SELECT reserve_price
-        FROM {$auction_table}
-        WHERE id = %d",
-        $auction_id
-    )
+	$wpdb->prepare(
+		"SELECT auction_end,
+		        buy_now_price
+		FROM {$auction_table}
+		WHERE id = %d",
+		$auction_id
+	)
 );
 
 if (
@@ -477,4 +504,62 @@ if (
     return (float) $winner->bid_amount >=
         (float) $auction->reserve_price;
 }
-}
+
+/**
+ * Check whether a bid reached the Buy Now price.
+ *
+ * @param int   $auction_id Auction ID.
+ * @param float $bid_amount Bid amount.
+ *
+ * @return bool
+ */
+public static function is_buy_now_bid(
+    $auction_id,
+    $bid_amount
+) {
+
+    global $wpdb;
+
+    $table = $wpdb->prefix . 'flipnzee_auctions';
+
+    $buy_now_price = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT buy_now_price
+             FROM {$table}
+             WHERE id = %d",
+            $auction_id
+        )
+    );
+
+    error_log(
+        'BUY NOW DEBUG: auction_id=' . $auction_id
+    );
+
+    error_log(
+        'BUY NOW DEBUG: buy_now_price=' .
+        print_r( $buy_now_price, true )
+    );
+
+    error_log(
+        'BUY NOW DEBUG: bid_amount=' .
+        print_r( $bid_amount, true )
+    );
+
+    if ( empty( $buy_now_price ) ) {
+
+        error_log( 'BUY NOW DEBUG: Empty Buy Now Price' );
+
+        return false;
+    }
+
+    $result =
+        (float) $bid_amount >=
+        (float) $buy_now_price;
+
+    error_log(
+        'BUY NOW DEBUG: result=' .
+        ( $result ? 'TRUE' : 'FALSE' )
+    );
+
+    return $result;
+}}

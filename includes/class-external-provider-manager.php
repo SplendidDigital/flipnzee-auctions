@@ -32,9 +32,10 @@ class Flipnzee_External_Provider_Manager {
 	 */
 
 public static function create_provider( $data ) {
-    error_log(
-	'FLIPNZEE EXTERNAL PROVIDER: create_provider() called.'
-);
+
+	error_log(
+		'FLIPNZEE EXTERNAL PROVIDER: create_provider() called.'
+	);
 
 	global $wpdb;
 
@@ -70,31 +71,22 @@ public static function create_provider( $data ) {
 			'%s',
 			'%s',
 		)
-        if ( false === $result ) {
-
-	error_log(
-		'FLIPNZEE EXTERNAL PROVIDER INSERT FAILED: ' .
-		$wpdb->last_error
-	);
-
-} else {
-
-	error_log(
-		'FLIPNZEE EXTERNAL PROVIDER INSERT SUCCEEDED'
-	);
-
-}
 	);
 
 	if ( false === $result ) {
 
 		error_log(
-			'FLIPNZEE EXTERNAL PROVIDER: Failed to create provider record. ' .
+			'FLIPNZEE EXTERNAL PROVIDER INSERT FAILED: ' .
 			$wpdb->last_error
 		);
 
 		return false;
+
 	}
+
+	error_log(
+		'FLIPNZEE EXTERNAL PROVIDER INSERT SUCCEEDED'
+	);
 
 	error_log(
 		'FLIPNZEE EXTERNAL PROVIDER: Created provider record #' .
@@ -102,8 +94,8 @@ public static function create_provider( $data ) {
 	);
 
 	return (int) $wpdb->insert_id;
-}
 
+}
 /**
  * Get an external provider record by ID.
  *

@@ -245,6 +245,39 @@ public function handle_place_bid() {
     $bid_amount
 );
 
+error_log( 'HANDLE: place_bid() finished' );
+
+$is_buy_now = Flipnzee_Bid_Manager::is_buy_now_bid(
+    $auction_id,
+    $bid_amount
+);
+
+error_log(
+    'HANDLE: is_buy_now = ' .
+    ( $is_buy_now ? 'TRUE' : 'FALSE' )
+);
+
+if ( $is_buy_now ) {
+
+	error_log(
+		'BUY NOW: Calling close_auction()'
+	);
+
+	Flipnzee_Auction_Manager::close_auction(
+		$auction_id
+	);
+
+	error_log(
+		'BUY NOW: Calling determine_winner()'
+	);
+
+	Flipnzee_Bid_Manager::determine_winner(
+		$auction_id
+	);
+
+}
+
+
 $url = wp_get_referer();
 
 if ( is_wp_error( $result ) ) {

@@ -625,4 +625,47 @@ ORDER BY auction_end DESC
 ARRAY_A
 	);
 }
+
+/**
+ * Close an auction immediately.
+ *
+ * @param int $auction_id Auction ID.
+ *
+ * @return bool
+ */
+public static function close_auction( $auction_id ) {
+
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'flipnzee_auctions';
+
+	error_log(
+		'BUY NOW: Closing auction #' . $auction_id
+	);
+
+	$result = $wpdb->update(
+		$table,
+		array(
+			'status' => 'closed',
+			'auction_end' => current_time( 'mysql' ),
+		),
+		array(
+			'id' => $auction_id,
+		),
+		array(
+			'%s',
+			'%s',
+		),
+		array(
+			'%d',
+		)
+	);
+
+	error_log(
+		'BUY NOW: close_auction result = ' .
+		print_r( $result, true )
+	);
+
+	return false !== $result;
+}
 }
