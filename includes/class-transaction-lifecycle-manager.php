@@ -32,16 +32,31 @@ class Flipnzee_Transaction_Lifecycle_Manager {
 	 * @param int $transaction_id Transaction ID.
 	 */
 	public static function payment_completed(
+	$transaction_id
+) {
+
+	error_log(
+		'FLIPNZEE LIFECYCLE: Payment completed for transaction #' .
 		$transaction_id
-	) {
+	);
 
-		error_log(
-			'FLIPNZEE LIFECYCLE: Payment completed for transaction #' .
-			$transaction_id
-		);
+	$current_state = Flipnzee_Transaction_State_Manager::PAYMENT_COMPLETED;
 
-	}
+	error_log(
+		'FLIPNZEE LIFECYCLE: Current state = ' .
+		Flipnzee_Transaction_State_Manager::get_label(
+			$current_state
+		)
+	);
+
+	/*
+	 * Continue existing workflow.
+	 */
+
+	Flipnzee_Transfer_Manager::create_transfer(
+		$transaction_id
+	);
 
 }
-
+}
 Flipnzee_Transaction_Lifecycle_Manager::init();

@@ -44,12 +44,20 @@ class Flipnzee_Database_Migration {
 
 	if ( version_compare( $current_version, '1.3.0', '<' ) ) {
 
-		error_log( 'FLIPNZEE RUN: migrate_to_1_3_0()' );
+	error_log( 'FLIPNZEE RUN: migrate_to_1_3_0()' );
 
-		self::migrate_to_1_3_0();
-	}
+	self::migrate_to_1_3_0();
 
 }
+
+if ( version_compare( $current_version, '1.4.0', '<' ) ) {
+
+	error_log( 'FLIPNZEE RUN: migrate_to_1_4_0()' );
+
+	self::migrate_to_1_4_0();
+
+}
+	}
     /**
  * Check whether a database table exists.
  *
@@ -190,7 +198,7 @@ if ( false === $result ) {
 }
 
 error_log(
-	"FLIPNZEE MIGRATION: Added {$column_name} column."
+	'FLIPNZEE MIGRATION: Added payment_reference column.'
 );
 
 return true;
@@ -335,4 +343,46 @@ private static function create_external_providers_table() {
 	);
 
 }
+/**
+ * Database migration to version 1.4.0.
+ *
+ * Adds the transaction state column.
+ *
+ * @return void
+ */
+private static function migrate_to_1_4_0() {
+
+	error_log(
+		'FLIPNZEE MIGRATION: Running database migration to version 1.4.0'
+	);
+
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'flipnzee_transactions';
+
+	if ( ! self::column_exists( $table, 'state' ) ) {
+
+		self::add_column(
+			$table,
+			'state',
+			"VARCHAR(50) NOT NULL DEFAULT 'payment_pending'"
+		);
+
+		error_log(
+			'FLIPNZEE MIGRATION: Added state column.'
+		);
+
+	}
+
+	update_option(
+		'flipnzee_db_version',
+		'1.4.0'
+	);
+
+	error_log(
+		'FLIPNZEE MIGRATION: Database version updated to 1.4.0'
+	);
+
+}
+
 }

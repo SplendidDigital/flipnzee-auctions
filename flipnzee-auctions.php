@@ -151,6 +151,9 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-transaction-lifecycle-manager.php';
 
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-transaction-state-manager.php';
+
 
 /**
  * Plugin Activation
