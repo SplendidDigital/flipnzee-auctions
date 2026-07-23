@@ -731,7 +731,17 @@ Flipnzee_Activity_Log::log(
 		$transaction_id,
 		$payment_status
 	)
+
 );
+
+if ( 'Completed' === $payment_status ) {
+
+	do_action(
+		'flipnzee_payment_completed',
+		$transaction_id
+	);
+
+}
     wp_safe_redirect(
         admin_url(
             'admin.php?page=flipnzee-transaction-details&transaction_id=' .

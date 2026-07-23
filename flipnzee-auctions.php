@@ -148,6 +148,9 @@ require_once FLIPNZEE_AUCTION_PATH .
 require_once FLIPNZEE_AUCTION_PATH . 
      'includes/class-watchlist-manager.php';
 
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-transaction-lifecycle-manager.php';
+
 
 /**
  * Plugin Activation
