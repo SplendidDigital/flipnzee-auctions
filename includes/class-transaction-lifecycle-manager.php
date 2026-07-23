@@ -50,12 +50,26 @@ class Flipnzee_Transaction_Lifecycle_Manager {
 	);
 
 	/*
-	 * Continue existing workflow.
-	 */
+ * Continue existing workflow.
+ */
 
-	Flipnzee_Transfer_Manager::create_transfer(
+// Create the ownership transfer.
+Flipnzee_Transfer_Manager::create_transfer(
+	$transaction_id
+);
+
+// Create a simulated Escrow transaction.
+$escrow_reference =
+	Flipnzee_Escrow_Provider::create_transaction(
 		$transaction_id
 	);
+
+error_log(
+	sprintf(
+		'FLIPNZEE LIFECYCLE: Escrow reference %s created.',
+		$escrow_reference
+	)
+);
 
 }
 }

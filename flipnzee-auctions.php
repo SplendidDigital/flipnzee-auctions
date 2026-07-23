@@ -145,6 +145,12 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-auctions-table.php' ) ) {
 require_once FLIPNZEE_AUCTION_PATH .
 	'includes/class-transaction-manager.php';
 
+require_once FLIPNZEE_AUCTION_PATH .
+	'includes/class-external-provider-manager.php';
+
+require_once FLIPNZEE_AUCTION_PATH .
+	'includes/class-escrow-provider.php';
+
 require_once FLIPNZEE_AUCTION_PATH . 
      'includes/class-watchlist-manager.php';
 
@@ -327,7 +333,7 @@ add_action(
     'admin_post_flipnzee_update_payment_status',
     array(
         'Flipnzee_Admin_Transaction_Details',
-        'update_payment_status'
+        'update_payment_status',
     )
 );
 
@@ -343,6 +349,9 @@ new Flipnzee_Shortcodes();
 new Flipnzee_Transaction_Manager();
 new Flipnzee_Watchlist_Ajax();
 new Flipnzee_Buyer_Dashboard();
+Flipnzee_Transaction_Lifecycle_Manager::init();
+
+Flipnzee_Escrow_Provider::init();
 /**
  * Load Flipnzee admin styles.
  */

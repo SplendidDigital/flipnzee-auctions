@@ -699,6 +699,14 @@ if ( ! empty( $transfer ) ) :
         ? sanitize_text_field( wp_unslash( $_POST['payment_status'] ) )
         : '';
 
+		error_log(
+    'FLIPNZEE ADMIN: payment_status received = [' . $payment_status . ']'
+);
+
+error_log(
+    'FLIPNZEE ADMIN: transaction_id = ' . $transaction_id
+);
+
     $status = 'pending';
 
 if ( 'completed' === $payment_status ) {
@@ -734,7 +742,18 @@ Flipnzee_Activity_Log::log(
 
 );
 
-if ( 'Completed' === $payment_status ) {
+error_log(
+	'FLIPNZEE ADMIN: About to fire payment_completed action.'
+);
+
+if ( 'completed' === $payment_status ) {
+
+	error_log(
+		sprintf(
+			'FLIPNZEE ADMIN: Firing payment_completed action for transaction #%d.',
+			$transaction_id
+		)
+	);
 
 	do_action(
 		'flipnzee_payment_completed',
