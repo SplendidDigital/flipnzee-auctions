@@ -496,12 +496,12 @@ public static function is_completed(
     }
 
     return (
-        'Completed' === $transfer['payment'] &&
-        'Completed' === $transfer['files'] &&
-        'Completed' === $transfer['database'] &&
-        'Completed' === $transfer['domain'] &&
-        'Completed' === $transfer['buyer']
-    );
+	'Completed' === $transfer['payment_status'] &&
+	'Completed' === $transfer['files_status'] &&
+	'Completed' === $transfer['database_status'] &&
+	'Completed' === $transfer['domain_status'] &&
+	'Completed' === $transfer['buyer_status']
+);
 
 }
 	/**
@@ -545,5 +545,119 @@ public static function is_completed(
 		);
 
 	}
+
+    /**
+ * Get transfer progress.
+ *
+ * @param int $transaction_id Transaction ID.
+ *
+ * @return array
+ */
+
+public static function get_progress( $transaction_id ) {
+
+	$transfer = self::get_transfer( $transaction_id );
+
+	if ( empty( $transfer ) ) {
+
+		return array(
+			'completed'  => 0,
+			'total'      => 5,
+			'percentage' => 0,
+		);
+
+	}
+
+	$fields = array(
+		'payment_status',
+		'files_status',
+		'database_status',
+		'domain_status',
+		'buyer_status',
+	);
+
+	$completed = 0;
+
+	foreach ( $fields as $field ) {
+
+		if (
+			isset( $transfer[ $field ] ) &&
+			'Completed' === $transfer[ $field ]
+		) {
+			$completed++;
+		}
+	}
+
+	return array(
+		'completed'  => $completed,
+		'total'      => 5,
+		'percentage' => (int) round( ( $completed / 5 ) * 100 ),
+	);
+
+}
+
+public static function get_overall_status( $transaction_id ) {
+
+	$progress = self::get_progress( $transaction_id );
+
+	if ( 5 === $progress['completed'] ) {
+		return 'Completed';
+	}
+
+	if ( $progress['completed'] > 0 ) {
+		return 'In Progress';
+	}
+
+	return 'Pending';
+
+}
+
+public static function maybe_complete_transfer( $transaction_id ) {
+
+	global $wpdb;
+
+	if ( ! self::is_completed( $transaction_id ) ) {
+		return;
+	}
+
+	$wpdb->update(
+		$wpdb->prefix . 'flipnzee_transactions',
+		array(
+			'status' => 'completed',
+		),
+		array(
+			'id' => absint( $transaction_id ),
+		),
+		array( '%s' ),
+		array( '%d' )
+	);
+
+	Flipnzee_Activity_Log::log(
+		sprintf(
+			'Transfer completed for transaction #%d.',
+			$transaction_id
+		)
+	);
+
+}
+
+public static function complete_stage(
+	$transaction_id,
+	$stage
+) {
+
+	$result = self::update_status(
+		$transaction_id,
+		$stage . '_status',
+		'Completed'
+	);
+
+	if ( $result ) {
+		self::maybe_complete_transfer( $transaction_id );
+	}
+
+	return $result;
+
+}
 
 }

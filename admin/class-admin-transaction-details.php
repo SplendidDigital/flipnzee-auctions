@@ -21,7 +21,13 @@ class Flipnzee_Admin_Transaction_Details {
 $transaction_id = isset( $_GET['transaction_id'] )
 	? absint( $_GET['transaction_id'] )
 	: 0;
-
+if ( isset( $_GET['transfer_updated'] ) ) {
+	?>
+	<div class="notice notice-success is-dismissible">
+		<p><strong>Transfer updated successfully.</strong></p>
+	</div>
+	<?php
+}
 $table = $wpdb->prefix . 'flipnzee_transactions';
 
 $transaction = $wpdb->get_row(
@@ -129,6 +135,49 @@ if ( isset( $_GET['updated'] ) ) {
     <td><?php echo esc_html( $transaction['payment_submitted_at'] ); ?></td>
 </tr>
 
+<tr>
+
+	<th>Payment Proof</th>
+
+	<td>
+
+		<?php if ( ! empty( $transaction['payment_proof_id'] ) ) : ?>
+
+			<?php
+			echo wp_get_attachment_link(
+				$transaction['payment_proof_id'],
+				'thumbnail',
+				false,
+				true
+			);
+			?>
+
+			<br><br>
+
+			<a
+				class="button"
+				target="_blank"
+				href="<?php echo esc_url(
+					wp_get_attachment_url(
+						$transaction['payment_proof_id']
+					)
+				); ?>"
+			>
+
+				View Original
+
+			</a>
+
+		<?php else : ?>
+
+			No payment proof uploaded.
+
+		<?php endif; ?>
+
+	</td>
+
+</tr>
+
 		</tbody>
 
 		</table>
@@ -166,45 +215,37 @@ wp_nonce_field(
 				</th>
 
 				<td>
-
-					<select
+<select
 	name="payment_status"
-	id="payment_status">
+	id="payment_status"
+>
 
 	<option
-    value="pending"
-    <?php selected( $transaction['payment_status'], 'pending' ); ?>>
-    <?php esc_html_e( 'Pending', 'flipnzee-auctions' ); ?>
-</option>
-
-	<option
-		value="processing"
-		<?php selected( $transaction['payment_status'], 'processing' ); ?>>
-		<?php esc_html_e( 'Processing', 'flipnzee-auctions' ); ?>
+		value="pending"
+		<?php selected( $transaction['payment_status'], 'pending' ); ?>
+	>
+		Pending
 	</option>
 
 	<option
-		value="paid"
-		<?php selected( $transaction['payment_status'], 'paid' ); ?>>
-		<?php esc_html_e( 'Paid', 'flipnzee-auctions' ); ?>
+		value="submitted"
+		<?php selected( $transaction['payment_status'], 'submitted' ); ?>
+	>
+		Submitted
+	</option>
+
+	<option
+		value="verified"
+		<?php selected( $transaction['payment_status'], 'verified' ); ?>
+	>
+		Verified
 	</option>
 
 	<option
 		value="completed"
-		<?php selected( $transaction['payment_status'], 'completed' ); ?>>
-		<?php esc_html_e( 'Completed', 'flipnzee-auctions' ); ?>
-	</option>
-
-	<option
-		value="cancelled"
-		<?php selected( $transaction['payment_status'], 'cancelled' ); ?>>
-		<?php esc_html_e( 'Cancelled', 'flipnzee-auctions' ); ?>
-	</option>
-
-	<option
-		value="refunded"
-		<?php selected( $transaction['payment_status'], 'refunded' ); ?>>
-		<?php esc_html_e( 'Refunded', 'flipnzee-auctions' ); ?>
+		<?php selected( $transaction['payment_status'], 'completed' ); ?>
+	>
+		Completed
 	</option>
 
 </select>
@@ -222,6 +263,416 @@ wp_nonce_field(
 		?>
 
 	</form>
+
+	<?php
+
+$transfer = Flipnzee_Transfer_Manager::get_transfer(
+	$transaction['id']
+);
+
+if ( ! empty( $transfer ) ) :
+
+	$progress = Flipnzee_Transfer_Manager::get_progress(
+		$transaction['id']
+	);
+
+	$overall = Flipnzee_Transfer_Manager::get_overall_status(
+		$transaction['id']
+	);
+
+?>
+
+<hr>
+
+<h2><?php esc_html_e( 'Ownership Transfer', 'flipnzee-auctions' ); ?></h2>
+
+<table class="widefat striped" style="max-width:900px;">
+
+	<tbody>
+
+	<tr>
+
+		<th style="width:220px;">
+
+			<?php esc_html_e(
+				'Overall Progress',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<strong>
+
+				<?php
+
+				echo esc_html(
+					$progress['completed']
+				);
+
+				?>
+
+				/
+
+				<?php
+
+				echo esc_html(
+					$progress['total']
+				);
+
+				?>
+
+			</strong>
+
+			<br><br>
+
+			<progress
+				value="<?php echo esc_attr(
+					$progress['percentage']
+				); ?>"
+				max="100"
+				style="width:350px;height:20px;">
+			</progress>
+
+			<br><br>
+
+			<strong>
+
+				<?php
+
+				echo esc_html(
+					$progress['percentage']
+				);
+
+				?>
+
+				%
+
+			</strong>
+
+			&nbsp;
+
+			<span
+				class="button"
+				style="cursor:default;">
+
+				<?php echo esc_html( $overall ); ?>
+
+			</span>
+
+		</td>
+
+	</tr>
+
+	</tbody>
+
+</table>
+
+<br>
+
+<form
+	method="post"
+	action="<?php echo esc_url(
+		admin_url(
+			'admin-post.php'
+		)
+	); ?>">
+
+	<?php
+
+	wp_nonce_field(
+		'flipnzee_update_transfer',
+		'flipnzee_transfer_nonce'
+	);
+
+	?>
+
+	<input
+		type="hidden"
+		name="action"
+		value="flipnzee_update_transfer">
+
+	<input
+		type="hidden"
+		name="transaction_id"
+		value="<?php echo esc_attr(
+			$transaction['id']
+		); ?>">
+
+	<table class="form-table">
+
+		<tr>
+
+			<th>
+
+				<?php esc_html_e(
+					'Payment',
+					'flipnzee-auctions'
+				); ?>
+
+			</th>
+
+			<td>
+
+				<select name="payment_status">
+
+					<option value="Pending"
+						<?php selected(
+							$transfer['payment_status'],
+							'Pending'
+						); ?>>
+
+						Pending
+
+					</option>
+
+					<option value="In Progress"
+						<?php selected(
+							$transfer['payment_status'],
+							'In Progress'
+						); ?>>
+
+						In Progress
+
+					</option>
+
+					<option value="Completed"
+						<?php selected(
+							$transfer['payment_status'],
+							'Completed'
+						); ?>>
+
+						Completed
+
+					</option>
+
+				</select>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>Website Files</th>
+
+			<td>
+
+				<select name="files_status">
+
+					<option value="Pending"
+						<?php selected(
+							$transfer['files_status'],
+							'Pending'
+						); ?>>
+
+						Pending
+
+					</option>
+
+					<option value="In Progress"
+						<?php selected(
+							$transfer['files_status'],
+							'In Progress'
+						); ?>>
+
+						In Progress
+
+					</option>
+
+					<option value="Completed"
+						<?php selected(
+							$transfer['files_status'],
+							'Completed'
+						); ?>>
+
+						Completed
+
+					</option>
+
+				</select>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>Database</th>
+
+			<td>
+
+				<select name="database_status">
+
+					<option value="Pending"
+						<?php selected(
+							$transfer['database_status'],
+							'Pending'
+						); ?>>
+
+						Pending
+
+					</option>
+
+					<option value="In Progress"
+						<?php selected(
+							$transfer['database_status'],
+							'In Progress'
+						); ?>>
+
+						In Progress
+
+					</option>
+
+					<option value="Completed"
+						<?php selected(
+							$transfer['database_status'],
+							'Completed'
+						); ?>>
+
+						Completed
+
+					</option>
+
+				</select>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>Domain</th>
+
+			<td>
+
+				<select name="domain_status">
+
+					<option value="Pending"
+						<?php selected(
+							$transfer['domain_status'],
+							'Pending'
+						); ?>>
+
+						Pending
+
+					</option>
+
+					<option value="In Progress"
+						<?php selected(
+							$transfer['domain_status'],
+							'In Progress'
+						); ?>>
+
+						In Progress
+
+					</option>
+
+					<option value="Completed"
+						<?php selected(
+							$transfer['domain_status'],
+							'Completed'
+						); ?>>
+
+						Completed
+
+					</option>
+
+				</select>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>Buyer</th>
+
+			<td>
+
+				<select name="buyer_status">
+
+					<option value="Pending"
+						<?php selected(
+							$transfer['buyer_status'],
+							'Pending'
+						); ?>>
+
+						Pending
+
+					</option>
+
+					<option value="In Progress"
+						<?php selected(
+							$transfer['buyer_status'],
+							'In Progress'
+						); ?>>
+
+						In Progress
+
+					</option>
+
+					<option value="Completed"
+						<?php selected(
+							$transfer['buyer_status'],
+							'Completed'
+						); ?>>
+
+						Completed
+
+					</option>
+
+				</select>
+
+			</td>
+
+		</tr>
+
+		<tr>
+
+			<th>
+
+				<?php esc_html_e(
+					'Notes',
+					'flipnzee-auctions'
+				); ?>
+
+			</th>
+
+			<td>
+
+				<textarea
+					name="notes"
+					rows="5"
+					style="width:100%;"><?php
+
+					echo esc_textarea(
+						$transfer['notes']
+					);
+
+					?></textarea>
+
+			</td>
+
+		</tr>
+
+	</table>
+
+	<?php
+
+	submit_button(
+		__(
+			'Save Transfer',
+			'flipnzee-auctions'
+		)
+	);
+
+	?>
+
+</form>
+
+<?php endif; ?>
 
 </div>
 
@@ -250,27 +701,10 @@ wp_nonce_field(
 
     $status = 'pending';
 
-switch ( $payment_status ) {
+if ( 'completed' === $payment_status ) {
 
-    case 'paid':
-        $status = 'paid';
-        break;
+	$status = 'completed';
 
-    case 'completed':
-        $status = 'completed';
-        break;
-
-    case 'cancelled':
-        $status = 'cancelled';
-        break;
-
-    case 'refunded':
-        $status = 'refunded';
-        break;
-
-    default:
-        $status = 'pending';
-        break;
 }
 		$wpdb->update(
         $wpdb->prefix . 'flipnzee_transactions',
@@ -291,7 +725,13 @@ switch ( $payment_status ) {
             '%d',
         )
     );
-
+Flipnzee_Activity_Log::log(
+	sprintf(
+		'Payment status for transaction #%d changed to %s.',
+		$transaction_id,
+		$payment_status
+	)
+);
     wp_safe_redirect(
         admin_url(
             'admin.php?page=flipnzee-transaction-details&transaction_id=' .
@@ -302,4 +742,108 @@ switch ( $payment_status ) {
 
     exit;
 }
+
+/**
+ * Update ownership transfer.
+ */
+public static function update_transfer() {
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die(
+			esc_html__(
+				'Permission denied.',
+				'flipnzee-auctions'
+			)
+		);
+	}
+
+	check_admin_referer(
+		'flipnzee_update_transfer',
+		'flipnzee_transfer_nonce'
+	);
+
+	$transaction_id = isset( $_POST['transaction_id'] )
+		? absint( wp_unslash( $_POST['transaction_id'] ) )
+		: 0;
+
+	$data = array(
+		'payment_status' => isset( $_POST['payment_status'] )
+			? sanitize_text_field( wp_unslash( $_POST['payment_status'] ) )
+			: 'Pending',
+
+		'files_status' => isset( $_POST['files_status'] )
+			? sanitize_text_field( wp_unslash( $_POST['files_status'] ) )
+			: 'Pending',
+
+		'database_status' => isset( $_POST['database_status'] )
+			? sanitize_text_field( wp_unslash( $_POST['database_status'] ) )
+			: 'Pending',
+
+		'domain_status' => isset( $_POST['domain_status'] )
+			? sanitize_text_field( wp_unslash( $_POST['domain_status'] ) )
+			: 'Pending',
+
+		'buyer_status' => isset( $_POST['buyer_status'] )
+			? sanitize_text_field( wp_unslash( $_POST['buyer_status'] ) )
+			: 'Pending',
+
+		'notes' => isset( $_POST['notes'] )
+			? sanitize_textarea_field( wp_unslash( $_POST['notes'] ) )
+			: '',
+	);
+
+	$result = Flipnzee_Transfer_Manager::update_transfer(
+		$transaction_id,
+		$data
+	);
+
+	Flipnzee_Activity_Log::log(
+    'ownership_transfer_updated',
+    0,
+    get_current_user_id(),
+    sprintf(
+        'Ownership transfer updated for transaction #%d.',
+        $transaction_id
+    )
+);
+
+	if ( $result ) {
+
+		Flipnzee_Transfer_Manager::maybe_complete_transfer(
+			$transaction_id
+		);
+
+		if ( 'Completed' === Flipnzee_Transfer_Manager::get_overall_status( $transaction_id ) ) {
+
+    Flipnzee_Activity_Log::log(
+        'ownership_transfer_completed',
+        0,
+        get_current_user_id(),
+        sprintf(
+            'Ownership transfer completed for transaction #%d.',
+            $transaction_id
+        )
+    );
+
+}
+
+		Flipnzee_Activity_Log::log(
+			sprintf(
+				'Ownership transfer updated for transaction #%d.',
+				$transaction_id
+			)
+		);
+	}
+
+	wp_safe_redirect(
+		admin_url(
+			'admin.php?page=flipnzee-transaction-details&transaction_id=' .
+			$transaction_id .
+			'&transfer_updated=1'
+		)
+	);
+
+	exit;
+}
+
 }

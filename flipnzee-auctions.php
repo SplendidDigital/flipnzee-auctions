@@ -324,6 +324,15 @@ add_action(
         'update_payment_status'
     )
 );
+
+add_action(
+	'admin_post_flipnzee_update_transfer',
+	array(
+		'Flipnzee_Admin_Transaction_Details',
+		'update_transfer',
+	)
+);
+
 new Flipnzee_Shortcodes();
 new Flipnzee_Transaction_Manager();
 new Flipnzee_Watchlist_Ajax();

@@ -169,4 +169,85 @@ public static function format_price( $amount ) {
     );
 }
 
+/**
+ * Verify a submitted payment.
+ *
+ * @param int $transaction_id Transaction ID.
+ *
+ * @return bool
+ */
+public static function verify_payment( $transaction_id ) {
+
+	global $wpdb;
+
+	$table = self::get_transactions_table_name();
+
+	$transaction = self::get_transaction(
+		$transaction_id
+	);
+
+	if ( ! $transaction ) {
+		return false;
+	}
+
+	if ( 'submitted' !== strtolower( $transaction->payment_status ) ) {
+		return false;
+	}
+
+	$result = $wpdb->update(
+		$table,
+		array(
+			'payment_status' => 'verified',
+			'updated_at'     => current_time( 'mysql' ),
+		),
+		array(
+			'id' => $transaction_id,
+		),
+		array(
+			'%s',
+			'%s',
+		),
+		array(
+			'%d',
+		)
+	);
+
+	if ( false === $result ) {
+		return false;
+	}
+
+	Flipnzee_Activity_Log::log(
+		sprintf(
+			'Payment verified for transaction #%d.',
+			$transaction_id
+		)
+	);
+
+	return true;
+}
+
+/**
+ * Is transaction awaiting verification?
+ *
+ * @param object $transaction Transaction.
+ *
+ * @return bool
+ */
+public static function is_payment_submitted(
+	$transaction
+) {
+
+	if ( ! $transaction ) {
+		return false;
+	}
+
+	return (
+		'submitted' ===
+		strtolower(
+			$transaction->payment_status
+		)
+	);
+
+}
+
 }
