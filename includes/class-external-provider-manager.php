@@ -55,6 +55,7 @@ public static function create_provider( $data ) {
 	);
 
 	$data = wp_parse_args( $data, $defaults );
+	
 
 	$result = $wpdb->insert(
 		$table,

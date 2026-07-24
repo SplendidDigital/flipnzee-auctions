@@ -15,7 +15,15 @@
 /**
  * Current database schema version.
  */
-define( 'FLIPNZEE_DB_VERSION', '1.3.0' );
+define(
+    'FLIPNZEE_DB_VERSION',
+    '1.4.0'
+);
+
+define(
+    'FLIPNZEE_AUCTION_VERSION',
+    '1.4.0'
+);
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

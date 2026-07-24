@@ -32,24 +32,107 @@ class Flipnzee_Escrow_Provider {
 	 * @param int $transaction_id Transaction ID.
 	 * @return string
 	 */
-	public static function create_transaction( $transaction_id ) {
+	/**
+ * Create a simulated escrow transaction.
+ *
+ * @param int $transaction_id Transaction ID.
+ * @return string|false Escrow reference on success, false on failure.
+ */
+public static function create_transaction( $transaction_id ) {
 
-		$reference = sprintf(
-			'ESCROW-%s-%d',
-			gmdate( 'YmdHis' ),
+	error_log(
+		sprintf(
+			'FLIPNZEE ESCROW: Starting escrow transaction for transaction #%d.',
 			$transaction_id
+		)
+	);
+
+	/*
+	|--------------------------------------------------------------------------
+	| Generate simulated escrow reference.
+	|--------------------------------------------------------------------------
+	*/
+
+	$reference = sprintf(
+		'ESCROW-%s-%d',
+		gmdate( 'YmdHis' ),
+		absint( $transaction_id )
+	);
+
+	/*
+	|--------------------------------------------------------------------------
+	| Persist provider record.
+	|--------------------------------------------------------------------------
+	*/
+
+	$provider_id =
+		Flipnzee_External_Provider_Manager::create_provider(
+			array(
+
+				'transaction_id'     => absint( $transaction_id ),
+
+				'provider'           => 'Escrow.com',
+
+				'provider_reference' => $reference,
+
+				'provider_url'       => '',
+
+				'status'             => 'created',
+
+				'started_at'         => current_time( 'mysql' ),
+
+				'completed_at'       => null,
+
+				'notes'              => 'Simulated escrow transaction created.',
+
+				'created_at'         => current_time( 'mysql' ),
+
+				'updated_at'         => current_time( 'mysql' ),
+
+			)
 		);
+
+	/*
+	|--------------------------------------------------------------------------
+	| Check insert result.
+	|--------------------------------------------------------------------------
+	*/
+
+	if ( false === $provider_id ) {
 
 		error_log(
 			sprintf(
-				'FLIPNZEE ESCROW: Created simulated escrow %s for transaction #%d',
-				$reference,
+				'FLIPNZEE ESCROW: Failed to create provider record for transaction #%d.',
 				$transaction_id
 			)
 		);
 
-		return $reference;
+		return false;
 
 	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| Success logs.
+	|--------------------------------------------------------------------------
+	*/
+
+	error_log(
+		sprintf(
+			'FLIPNZEE ESCROW: Provider record #%d created.',
+			$provider_id
+		)
+	);
+
+	error_log(
+		sprintf(
+			'FLIPNZEE ESCROW: Escrow reference %s created.',
+			$reference
+		)
+	);
+
+	return $reference;
+
+}
 
 }

@@ -151,6 +151,50 @@ CREATE TABLE {$transfer_table} (
 ";
 
 dbDelta( $transfer_sql );
+
+/*
+|--------------------------------------------------------------------------
+| External Providers
+|--------------------------------------------------------------------------
+*/
+
+$providers_table =
+    $wpdb->prefix .
+    'flipnzee_external_providers';
+
+$sql_providers = "
+
+CREATE TABLE {$providers_table} (
+
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    transaction_id BIGINT UNSIGNED NOT NULL,
+
+    provider VARCHAR(50) NOT NULL,
+
+    provider_reference VARCHAR(255) NOT NULL,
+
+    provider_transaction_id VARCHAR(255) DEFAULT '',
+
+    provider_status VARCHAR(50) DEFAULT 'created',
+
+    created_at DATETIME NOT NULL,
+
+    updated_at DATETIME NOT NULL,
+
+    PRIMARY KEY (id),
+
+    KEY transaction_id (transaction_id),
+
+    KEY provider (provider),
+
+    KEY provider_status (provider_status)
+
+) {$charset_collate};
+
+";
+
+
 dbDelta( $sql );
 
 } // End create_tables()
