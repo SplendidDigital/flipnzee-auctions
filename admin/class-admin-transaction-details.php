@@ -73,118 +73,289 @@ if ( isset( $_GET['updated'] ) ) {
 
 <div class="wrap">
 
-	<h1>Transaction Details</h1>
+	<p style="margin-bottom:15px;">
 
-	<table class="widefat striped" style="max-width:800px;">
+		<a
+			class="button"
+			href="<?php echo esc_url(
+				admin_url(
+					'admin.php?page=flipnzee-transactions'
+				)
+			); ?>"
+		>
 
-		<tbody>
+			← <?php esc_html_e(
+				'Back to Transactions',
+				'flipnzee-auctions'
+			); ?>
 
-			<tr>
-				<th>ID</th>
-				<td><?php echo esc_html( $transaction['id'] ); ?></td>
-			</tr>
+		</a>
 
-			<tr>
-				<th>Auction</th>
-				<td><?php echo esc_html( $transaction['auction_id'] ); ?></td>
-			</tr>
+	</p>
 
-			<tr>
-				<th>Listing</th>
-				<td><?php echo esc_html( $transaction['listing_id'] ); ?></td>
-			</tr>
+	<h1>
 
-			<tr>
-				<th>Seller</th>
-				<td><?php echo esc_html( $transaction['seller_id'] ); ?></td>
-			</tr>
+		<?php
 
-			<tr>
-				<th>Buyer</th>
-				<td><?php echo esc_html( $transaction['buyer_id'] ); ?></td>
-			</tr>
+		printf(
+			/* translators: %d: Transaction ID */
+			esc_html__(
+				'Transaction #%d',
+				'flipnzee-auctions'
+			),
+			absint( $transaction['id'] )
+		);
 
-			<tr>
-				<th>Winning Bid</th>
-				<td><?php echo esc_html( $transaction['winning_bid'] ); ?></td>
-			</tr>
+		?>
 
-			
+	</h1>
 
-			<tr>
-				<th>Created</th>
-				<td><?php echo esc_html( $transaction['created_at'] ); ?></td>
-			</tr>
 
-			<tr>
-				<th>Updated</th>
-				<td><?php echo esc_html( $transaction['updated_at'] ); ?></td>
-			</tr>
-			<tr>
-    <th>Payment Status</th>
-    <td><?php echo esc_html( ucfirst( $transaction['payment_status'] ) ); ?></td>
-</tr>
 
-<tr>
-    <th>Payment Gateway</th>
-    <td><?php echo esc_html( $transaction['payment_gateway'] ); ?></td>
-</tr>
+<!-- Transaction Summary starts here -->
 
-<tr>
-    <th>Payment Submitted</th>
-    <td><?php echo esc_html( $transaction['payment_submitted_at'] ); ?></td>
-</tr>
+<div class="postbox" style="max-width:950px; margin-bottom:25px;">
 
-<tr>
+	<div class="inside">
 
-	<th>Payment Proof</th>
-
-	<td>
-
-		<?php if ( ! empty( $transaction['payment_proof_id'] ) ) : ?>
+		<h2 style="margin-top:0;">
 
 			<?php
-			echo wp_get_attachment_link(
-				$transaction['payment_proof_id'],
-				'thumbnail',
-				false,
-				true
+			esc_html_e(
+				'Transaction Summary',
+				'flipnzee-auctions'
 			);
 			?>
 
-			<br><br>
+		</h2>
 
-			<a
-				class="button"
-				target="_blank"
-				href="<?php echo esc_url(
-					wp_get_attachment_url(
-						$transaction['payment_proof_id']
-					)
-				); ?>"
-			>
+		<table class="widefat striped">
 
-				View Original
+			<tbody>
 
-			</a>
+				<tr>
 
-		<?php else : ?>
+					<th width="220">
 
-			No payment proof uploaded.
+						<?php esc_html_e(
+							'Transaction ID',
+							'flipnzee-auctions'
+						); ?>
 
-		<?php endif; ?>
+					</th>
 
-	</td>
+					<td>
 
-</tr>
+						<strong>
 
-		</tbody>
+							#<?php echo esc_html( $transaction['id'] ); ?>
+
+						</strong>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Auction ID',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['auction_id'] ); ?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Listing ID',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['listing_id'] ); ?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Seller',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['seller_id'] ); ?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Buyer',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['buyer_id'] ); ?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Winning Bid',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<strong>
+
+							<?php echo esc_html( $transaction['winning_bid'] ); ?>
+
+						</strong>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Payment Status',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<strong>
+
+							<?php echo esc_html( ucfirst( $transaction['payment_status'] ) ); ?>
+
+						</strong>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Payment Gateway',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['payment_gateway'] ); ?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Created',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['created_at'] ); ?>
+
+					</td>
+
+				</tr>
+
+				<tr>
+
+					<th>
+
+						<?php esc_html_e(
+							'Last Updated',
+							'flipnzee-auctions'
+						); ?>
+
+					</th>
+
+					<td>
+
+						<?php echo esc_html( $transaction['updated_at'] ); ?>
+
+					</td>
+
+				</tr>
+
+			</tbody>
 
 		</table>
 
-	<hr>
+	</div>
 
-	<h2><?php esc_html_e( 'Payment Management', 'flipnzee-auctions' ); ?></h2>
+</div>
+
+
+
+<hr>
+
+<h2>
+	💳 <?php esc_html_e(
+		'Payment Management',
+		'flipnzee-auctions'
+	); ?>
+</h2>
+
+<div class="postbox" style="max-width:950px;">
+<div class="inside"></div>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 
@@ -263,6 +434,8 @@ wp_nonce_field(
 		?>
 
 	</form>
+	</div>
+</div>
 
 	<?php
 
@@ -282,12 +455,10 @@ $provider =
 <hr>
 
 <h2>
-
-	<?php esc_html_e(
+	🔗 <?php esc_html_e(
 		'External Provider',
 		'flipnzee-auctions'
 	); ?>
-
 </h2>
 
 <?php if ( empty( $provider ) ) : ?>
@@ -554,7 +725,12 @@ if ( ! empty( $transfer ) ) :
 
 <hr>
 
-<h2><?php esc_html_e( 'Ownership Transfer', 'flipnzee-auctions' ); ?></h2>
+<h2>
+	🚚 <?php esc_html_e(
+		'Ownership Transfer',
+		'flipnzee-auctions'
+	); ?>
+</h2>
 
 <table class="widefat striped" style="max-width:900px;">
 
@@ -941,6 +1117,8 @@ if ( ! empty( $transfer ) ) :
 	?>
 
 </form>
+</div>
+</div>
 
 <?php endif; ?>
 
