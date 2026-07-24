@@ -266,6 +266,276 @@ wp_nonce_field(
 
 	<?php
 
+/*
+|--------------------------------------------------------------------------
+| External Provider Information
+|--------------------------------------------------------------------------
+*/
+
+$provider =
+	Flipnzee_External_Provider_Manager::get_provider_by_transaction(
+		$transaction['id']
+	);
+
+?>
+
+<hr>
+
+<h2>
+
+	<?php esc_html_e(
+		'External Provider',
+		'flipnzee-auctions'
+	); ?>
+
+</h2>
+
+<?php if ( empty( $provider ) ) : ?>
+
+	<div class="notice notice-warning inline">
+
+		<p>
+
+			<?php esc_html_e(
+				'No external provider record exists for this transaction.',
+				'flipnzee-auctions'
+			); ?>
+
+		</p>
+
+	</div>
+
+<?php else : ?>
+
+<table
+	class="widefat striped"
+	style="max-width:900px;">
+
+	<tbody>
+
+	<tr>
+
+		<th style="width:220px;">
+
+			<?php esc_html_e(
+				'Provider',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<?php
+			echo esc_html(
+				$provider['provider']
+			);
+			?>
+
+		</td>
+
+	</tr>
+
+	<tr>
+
+		<th>
+
+			<?php esc_html_e(
+				'Reference',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<code>
+
+			<?php
+
+			echo esc_html(
+				$provider['provider_reference']
+			);
+
+			?>
+
+			</code>
+
+		</td>
+
+	</tr>
+
+	<tr>
+
+		<th>
+
+			<?php esc_html_e(
+				'Status',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<?php
+
+			$status =
+				$provider['status'];
+
+			$color = '#777';
+
+			switch ( strtolower( $status ) ) {
+
+				case 'created':
+
+					$color = '#2271b1';
+
+					break;
+
+				case 'completed':
+
+					$color = '#008a20';
+
+					break;
+
+				case 'failed':
+
+					$color = '#d63638';
+
+					break;
+
+				case 'pending':
+
+					$color = '#dba617';
+
+					break;
+
+			}
+
+			?>
+
+			<span
+				style="
+					background: <?php echo esc_attr( $color ); ?>;
+					color:#fff;
+					padding:5px 10px;
+					border-radius:4px;
+					font-weight:600;
+				">
+
+				<?php
+
+				echo esc_html(
+					ucfirst( $status )
+				);
+
+				?>
+
+			</span>
+
+		</td>
+
+	</tr>
+
+	<tr>
+
+		<th>
+
+			<?php esc_html_e(
+				'Started',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<?php
+
+			echo esc_html(
+				$provider['started_at']
+			);
+
+			?>
+
+		</td>
+
+	</tr>
+
+	<tr>
+
+		<th>
+
+			<?php esc_html_e(
+				'Completed',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<?php
+
+			echo ! empty(
+				$provider['completed_at']
+			)
+
+			? esc_html(
+				$provider['completed_at']
+			)
+
+			: '&mdash;';
+
+			?>
+
+		</td>
+
+	</tr>
+
+	<tr>
+
+		<th>
+
+			<?php esc_html_e(
+				'Notes',
+				'flipnzee-auctions'
+			); ?>
+
+		</th>
+
+		<td>
+
+			<?php
+
+			echo ! empty(
+				$provider['notes']
+			)
+
+			? nl2br(
+				esc_html(
+					$provider['notes']
+				)
+			)
+
+			: '&mdash;';
+
+			?>
+
+		</td>
+
+	</tr>
+
+	</tbody>
+
+</table>
+
+<?php endif; ?>
+
+
+	<?php
+
 $transfer = Flipnzee_Transfer_Manager::get_transfer(
 	$transaction['id']
 );
@@ -699,13 +969,9 @@ if ( ! empty( $transfer ) ) :
         ? sanitize_text_field( wp_unslash( $_POST['payment_status'] ) )
         : '';
 
-		error_log(
-    'FLIPNZEE ADMIN: payment_status received = [' . $payment_status . ']'
-);
+	
 
-error_log(
-    'FLIPNZEE ADMIN: transaction_id = ' . $transaction_id
-);
+
 
     $status = 'pending';
 
