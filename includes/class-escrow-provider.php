@@ -38,6 +38,26 @@ class Flipnzee_Escrow_Provider {
  * @param int $transaction_id Transaction ID.
  * @return string|false Escrow reference on success, false on failure.
  */
+/**
+ * Create an escrow transaction.
+ *
+ * Currently delegates transaction creation to the Escrow API Client,
+ * which operates in simulation mode. Future lessons will replace the
+ * simulated responses with live Escrow.com API communication.
+ *
+ * @param int $transaction_id Transaction ID.
+ * @return string|false Escrow reference on success, false on failure.
+ */
+/**
+ * Create an escrow transaction.
+ *
+ * Currently delegates transaction creation to the Escrow API Client,
+ * which operates in simulation mode. Future lessons will replace the
+ * simulated responses with live Escrow.com API communication.
+ *
+ * @param int $transaction_id Transaction ID.
+ * @return string|false Escrow reference on success, false on failure.
+ */
 public static function create_transaction( $transaction_id ) {
 
 	error_log(
@@ -49,15 +69,46 @@ public static function create_transaction( $transaction_id ) {
 
 	/*
 	|--------------------------------------------------------------------------
-	| Generate simulated escrow reference.
+	| Create API client.
+	|--------------------------------------------------------------------------
+	*/
+error_log( 'STEP 1: create_transaction entered' );
+	$client = new Flipnzee_Escrow_API_Client();
+	error_log(
+    'STEP 4 RESPONSE: ' .
+    print_r( $response, true )
+);
+	error_log( 'STEP 3: API client created' );
+
+	/*
+	|--------------------------------------------------------------------------
+	| Ask API client to create transaction.
 	|--------------------------------------------------------------------------
 	*/
 
-	$reference = sprintf(
-		'ESCROW-%s-%d',
-		gmdate( 'YmdHis' ),
-		absint( $transaction_id )
+	$response = $client->create_transaction(
+		array(
+			'transaction_id' => absint( $transaction_id ),
+		)
 	);
+
+	if (
+		empty( $response['success'] ) ||
+		empty( $response['reference'] )
+	) {
+
+		error_log(
+			sprintf(
+				'FLIPNZEE ESCROW: API client failed for transaction #%d.',
+				$transaction_id
+			)
+		);
+
+		return false;
+
+	}
+
+	$reference = $response['reference'];
 
 	/*
 	|--------------------------------------------------------------------------
@@ -77,13 +128,13 @@ public static function create_transaction( $transaction_id ) {
 
 				'provider_url'       => '',
 
-				'status'             => 'created',
+				'status'             => $response['status'],
 
 				'started_at'         => current_time( 'mysql' ),
 
 				'completed_at'       => null,
 
-				'notes'              => 'Simulated escrow transaction created.',
+				'notes'              => 'Transaction created through Escrow API Client.',
 
 				'created_at'         => current_time( 'mysql' ),
 
@@ -91,12 +142,6 @@ public static function create_transaction( $transaction_id ) {
 
 			)
 		);
-
-	/*
-	|--------------------------------------------------------------------------
-	| Check insert result.
-	|--------------------------------------------------------------------------
-	*/
 
 	if ( false === $provider_id ) {
 
@@ -110,12 +155,6 @@ public static function create_transaction( $transaction_id ) {
 		return false;
 
 	}
-
-	/*
-	|--------------------------------------------------------------------------
-	| Success logs.
-	|--------------------------------------------------------------------------
-	*/
 
 	error_log(
 		sprintf(
@@ -134,5 +173,4 @@ public static function create_transaction( $transaction_id ) {
 	return $reference;
 
 }
-
 }

@@ -38,7 +38,6 @@ if ( ! defined( 'FLIPNZEE_AUCTION_HISTORY_DAYS' ) ) {
 /**
  * Plugin Constants
  */
-define( 'FLIPNZEE_AUCTION_VERSION', '1.3.0' );
 define( 'FLIPNZEE_AUCTION_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FLIPNZEE_AUCTION_URL', plugin_dir_url( __FILE__ ) );
 
@@ -100,6 +99,11 @@ if ( file_exists(
     require_once FLIPNZEE_AUCTION_PATH .
         'includes/class-bid-manager.php';
 }
+
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-escrow-api-client.php';
+
+
 require_once FLIPNZEE_AUCTION_PATH .
     'includes/class-payment-manager.php';
 
@@ -155,6 +159,10 @@ require_once FLIPNZEE_AUCTION_PATH .
 
 require_once FLIPNZEE_AUCTION_PATH .
 	'includes/class-external-provider-manager.php';
+
+
+require_once FLIPNZEE_AUCTION_PATH .
+    'includes/class-escrow-provider.php';
 
 require_once FLIPNZEE_AUCTION_PATH .
 	'includes/class-escrow-provider.php';
