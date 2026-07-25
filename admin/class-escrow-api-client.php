@@ -1,10 +1,10 @@
 <?php
 /**
- * Escrow API Client.
+ * Escrow API client.
  *
- * Provides a reusable interface for communicating with Escrow.com.
- * Currently operates in simulation mode. Future lessons will replace
- * the simulated responses with live REST API requests.
+ * Provides a single, reusable HTTP client for Escrow.com. The client supports
+ * simulation, sandbox, and production environments while exposing a consistent
+ * response format to the rest of the Flipnzee Auctions plugin.
  *
  * @package Flipnzee_Auctions
  */
@@ -13,245 +13,497 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Client for the Escrow.com REST API.
+ */
 class Flipnzee_Escrow_API_Client {
 
 	/**
-	 * Escrow Sandbox endpoint.
+	 * Escrow.com sandbox API base URL.
+	 *
+	 * @var string
 	 */
 	const SANDBOX_URL = 'https://api.escrow-sandbox.com/2017-09-01';
 
 	/**
-	 * Escrow Live endpoint.
+	 * Escrow.com production API base URL.
+	 *
+	 * @var string
 	 */
 	const LIVE_URL = 'https://api.escrow.com/2017-09-01';
 
 	/**
-	 * API Version.
+	 * Escrow.com API version used by this client.
+	 *
+	 * @var string
 	 */
 	const API_VERSION = '2017-09-01';
 
 	/**
-	 * Whether sandbox mode is enabled.
+	 * Settings loaded from the Flipnzee Escrow settings option.
 	 *
-	 * @var bool
+	 * @var array<string, mixed>
 	 */
-	protected $sandbox = true;
+	private $settings = array();
 
 	/**
-	 * Constructor.
+	 * Initialize the client with the saved Escrow settings.
+	 *
+	 * @return void
 	 */
 	public function __construct() {
-
-		error_log(
-			'FLIPNZEE ESCROW API: Client initialized.'
+		$this->settings = wp_parse_args(
+			get_option( 'flipnzee_escrow_settings', array() ),
+			array(
+				'environment'        => 'simulation',
+				'sandbox_email'      => '',
+				'sandbox_api_key'    => '',
+				'production_email'   => '',
+				'production_api_key' => '',
+				'debug'              => false,
+			)
 		);
 
+		$this->log( 'Escrow API client initialized.' );
 	}
 
 	/**
-	 * Get current endpoint.
+	 * Test API connectivity and authentication.
 	 *
-	 * @return string
-	 */
-	public function get_endpoint() {
-
-		return $this->sandbox
-			? self::SANDBOX_URL
-			: self::LIVE_URL;
-
-	}
-
-	/**
-	 * Enable sandbox mode.
-	 *
-	 * @return void
-	 */
-	public function enable_sandbox() {
-
-		$this->sandbox = true;
-
-	}
-
-	/**
-	 * Enable live mode.
-	 *
-	 * @return void
-	 */
-	public function enable_live() {
-
-		$this->sandbox = false;
-
-	}
-
-	/**
-	 * Test connection.
-	 *
-	 * @return array
+	 * @return array<string, mixed> Normalized API response.
 	 */
 	public function test_connection() {
+		$result = $this->send_request( 'GET', '/' );
 
-		error_log(
-			'FLIPNZEE ESCROW API: Testing connection.'
-		);
+		if ( $result['success'] && 'simulation' !== $this->get_environment() ) {
+			$result['message'] = sprintf(
+				'%s connection established successfully.',
+				ucfirst( $this->get_environment() )
+			);
+		}
 
-		return array(
-			'success'  => true,
-			'mode'     => $this->sandbox ? 'sandbox' : 'live',
-			'endpoint' => $this->get_endpoint(),
-			'message'  => 'Simulation mode active.',
-		);
-
+		return $result;
 	}
 
 	/**
-	 * Create transaction.
+	 * Create an Escrow transaction.
 	 *
-	 * @param array $transaction_data Transaction data.
-	 * @return array
+	 * @param array<string, mixed> $transaction_data Transaction payload.
+	 * @return array<string, mixed> Normalized API response.
 	 */
 	public function create_transaction( $transaction_data = array() ) {
-
-		error_log(
-			'FLIPNZEE ESCROW API: Simulating transaction creation.'
-		);
-
-		return array(
-
-			'success' => true,
-
-			'reference' => sprintf(
-				'ESCROW-%s',
-				gmdate( 'YmdHis' )
-			),
-
-			'status' => 'created',
-
-			'endpoint' => $this->get_endpoint(),
-
-			'data' => $transaction_data,
-
-		);
-
+		return $this->send_request( 'POST', 'transaction', $transaction_data );
 	}
 
 	/**
-	 * Retrieve transaction.
+	 * Retrieve an Escrow transaction.
 	 *
-	 * @param string $reference Provider reference.
-	 * @return array
+	 * @param string $reference Provider transaction reference.
+	 * @return array<string, mixed> Normalized API response.
 	 */
 	public function get_transaction( $reference ) {
-
-		error_log(
-			sprintf(
-				'FLIPNZEE ESCROW API: Retrieving %s.',
-				$reference
-			)
+		return $this->send_request(
+			'GET',
+			'transaction/' . rawurlencode( (string) $reference )
 		);
+	}
+
+	/**
+	 * Update an Escrow transaction.
+	 *
+	 * @param string               $reference Provider transaction reference.
+	 * @param array<string, mixed> $data      Values to update.
+	 * @return array<string, mixed> Normalized API response.
+	 */
+	public function update_transaction( $reference, $data = array() ) {
+		return $this->send_request(
+			'PATCH',
+			'transaction/' . rawurlencode( (string) $reference ),
+			$data
+		);
+	}
+
+	/**
+	 * Cancel an Escrow transaction.
+	 *
+	 * @param string $reference Provider transaction reference.
+	 * @return array<string, mixed> Normalized API response.
+	 */
+	public function cancel_transaction( $reference ) {
+		return $this->send_request(
+			'POST',
+			'transaction/' . rawurlencode( (string) $reference ) . '/cancel'
+		);
+	}
+
+	/**
+	 * Retrieve the current status of an Escrow transaction.
+	 *
+	 * @param string $reference Provider transaction reference.
+	 * @return array<string, mixed> Normalized API response.
+	 */
+	public function get_status( $reference ) {
+		return $this->send_request(
+			'GET',
+			'transaction/' . rawurlencode( (string) $reference )
+		);
+	}
+
+	/**
+	 * Write a diagnostic message when Escrow debugging is enabled.
+	 *
+	 * Messages must never include credentials or request bodies.
+	 *
+	 * @param string $message Message to write to the PHP error log.
+	 * @return void
+	 */
+	private function log( $message ) {
+		if ( empty( $this->settings['debug'] ) ) {
+			return;
+		}
+
+		error_log( 'FLIPNZEE ESCROW API: ' . $message );
+	}
+
+	/**
+	 * Get the configured Escrow environment.
+	 *
+	 * Invalid or missing values safely fall back to simulation.
+	 *
+	 * @return string One of simulation, sandbox, or production.
+	 */
+	private function get_environment() {
+		$environment = isset( $this->settings['environment'] )
+			? sanitize_key( (string) $this->settings['environment'] )
+			: 'simulation';
+
+		return in_array( $environment, array( 'simulation', 'sandbox', 'production' ), true )
+			? $environment
+			: 'simulation';
+	}
+
+	/**
+	 * Get the API base URL for the configured environment.
+	 *
+	 * @return string API base URL, or an empty string in simulation mode.
+	 */
+	private function get_endpoint() {
+		switch ( $this->get_environment() ) {
+			case 'production':
+				return self::LIVE_URL;
+
+			case 'sandbox':
+				return self::SANDBOX_URL;
+
+			default:
+				return '';
+		}
+	}
+
+	/**
+	 * Build the headers for an authenticated Escrow API request.
+	 *
+	 * @return array<string, string> Request headers.
+	 */
+	private function get_headers() {
+		$environment = $this->get_environment();
+		$email       = (string) $this->settings[ $environment . '_email' ];
+		$api_key     = (string) $this->settings[ $environment . '_api_key' ];
+		$version     = defined( 'FLIPNZEE_AUCTION_VERSION' ) ? FLIPNZEE_AUCTION_VERSION : 'development';
 
 		return array(
+			'Accept'        => 'application/json',
+			'Content-Type'  => 'application/json',
+			'Authorization' => 'Basic ' . base64_encode( $email . ':' . $api_key ),
+			'User-Agent'    => 'Flipnzee Auctions/' . $version,
+		);
+	}
 
-			'success'   => true,
+	/**
+	 * Send a request to Escrow.com and normalize its response.
+	 *
+	 * This is the only method in this class that makes HTTP requests.
+	 *
+	 * @param string               $method HTTP request method.
+	 * @param string               $path   API path relative to the base URL.
+	 * @param array<string, mixed> $body   Optional request payload.
+	 * @return array<string, mixed> Normalized API response.
+	 */
 
-			'reference' => $reference,
+		/**
+	 * Build a standardized successful response.
+	 *
+	 * @param string $message       Response message.
+	 * @param array  $data          Response payload.
+	 * @param string $reference     Provider reference.
+	 * @param string $status        Transaction status.
+	 * @param string $endpoint      Endpoint.
+	 * @param int    $response_code HTTP response code.
+	 *
+	 * @return array
+	 */
+	private function success_response(
+		$message = '',
+		$data = array(),
+		$reference = '',
+		$status = '',
+		$endpoint = '',
+		$response_code = 200
+	) {
 
-			'status'    => 'created',
-
+		return array(
+			'success'       => true,
+			'message'       => $message,
+			'data'          => $data,
+			'reference'     => $reference,
+			'status'        => $status,
+			'endpoint'      => $endpoint,
+			'response_code' => (int) $response_code,
 		);
 
 	}
 
 	/**
-	 * Update transaction.
+	 * Build a standardized error response.
 	 *
-	 * @param string $reference Provider reference.
-	 * @param array  $data Updated values.
+	 * @param string $message       Error message.
+	 * @param string $endpoint      Endpoint.
+	 * @param int    $response_code HTTP response code.
+	 * @param array  $data          Optional response payload.
+	 *
 	 * @return array
 	 */
-	public function update_transaction(
-		$reference,
-		$data = array()
-	) {
+private function error_response(
+    $message,
+    $endpoint = '',
+    $response_code = 500,
+    $data = array()
+) {
 
-		error_log(
-			sprintf(
-				'FLIPNZEE ESCROW API: Updating %s.',
-				$reference
-			)
+    return array(
+        'success'       => false,
+        'message'       => $message,
+        'data'          => $data,
+        'reference'     => '',
+        'status'        => '',
+        'endpoint'      => $endpoint,
+        'response_code' => (int) $response_code,
+    );
+
+}
+
+
+	private function send_request( $method, $path, $body = array() ) {
+		if ( 'simulation' === $this->get_environment() ) {
+			return $this->simulate_request( $method, $path, $body );
+		}
+
+		$endpoint = trailingslashit( $this->get_endpoint() ) . ltrim( $path, '/' );
+		$headers  = $this->get_headers();
+
+		if ( empty( $this->settings[ $this->get_environment() . '_email' ] ) || empty( $this->settings[ $this->get_environment() . '_api_key' ] ) ) {
+			return $this->error_response(
+    'Escrow API credentials are not configured.',
+    $endpoint,
+    0
+);
+		}
+
+		$args = array(
+			'method'  => strtoupper( $method ),
+			'headers' => $headers,
+			'timeout' => 20,
 		);
 
-		return array(
+		if ( ! empty( $body ) ) {
+			$args['body'] = wp_json_encode( $body );
 
-			'success' => true,
+			if ( false === $args['body'] ) {
+				return $this->error_response(
+    'The request data could not be encoded as JSON.',
+    $endpoint,
+    0
+);
+			}
+		}
 
-			'reference' => $reference,
+		$this->log( sprintf( '%s %s', $args['method'], $endpoint ) );
+		$response = wp_remote_request( $endpoint, $args );
 
-			'updated' => true,
+		if ( is_wp_error( $response ) ) {
+			$this->log( $response->get_error_message() );
+			return $this->error_response(
+    $response->get_error_message(),
+    $endpoint,
+    0
+);
+		}
 
-			'data' => $data,
+		$response_code = (int) wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$data          = array();
 
-		);
+		if ( '' !== trim( $response_body ) ) {
+			$data = json_decode( $response_body, true );
 
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
+				$this->log( 'The Escrow API returned invalid JSON.' );
+				return $this->error_response(
+    'The Escrow API returned an invalid JSON response.',
+    $endpoint,
+    $response_code
+);
+			}
+		}
+
+		$success = $response_code >= 200 && $response_code < 300;
+		$message = $success ? 'Escrow API request completed successfully.' : $this->get_error_message( $response_code, $data );
+
+		$this->log( 'HTTP response code: ' . $response_code );
+		if ( $success ) {
+
+    return $this->success_response(
+        $message,
+        $data,
+        $this->extract_reference( $data ),
+        $this->extract_status( $data ),
+        $endpoint,
+        $response_code
+    );
+
+}
+
+return $this->error_response(
+    $message,
+    $endpoint,
+    $response_code,
+    $data
+);
 	}
 
 	/**
-	 * Cancel transaction.
+	 * Return a realistic response without making an external HTTP request.
 	 *
-	 * @param string $reference Provider reference.
-	 * @return array
+	 * @param string               $method Simulated HTTP request method.
+	 * @param string               $path   Simulated API path.
+	 * @param array<string, mixed> $body   Simulated request payload.
+	 * @return array<string, mixed> Normalized simulated response.
 	 */
-	public function cancel_transaction(
-		$reference
-	) {
-
-		error_log(
-			sprintf(
-				'FLIPNZEE ESCROW API: Cancelling %s.',
-				$reference
-			)
+	private function simulate_request( $method, $path, $body ) {
+		$reference   = $this->get_reference_from_path( $path );
+		$timestamp   = current_time( 'mysql', true );
+		$transaction = array(
+			'id'             => $reference ? $reference : 'ESCROW-' . gmdate( 'YmdHis' ) . '-' . wp_rand( 100, 999 ),
+			'status'         => 'created',
+			'created_at'     => $timestamp,
+			'updated_at'     => $timestamp,
+			'transaction_id' => isset( $body['transaction_id'] ) ? absint( $body['transaction_id'] ) : 0,
 		);
 
-		return array(
+		if ( 'POST' === strtoupper( $method ) && false !== strpos( $path, '/cancel' ) ) {
+			$transaction['status'] = 'cancelled';
+		} elseif ( 'PATCH' === strtoupper( $method ) ) {
+			$transaction = array_merge( $transaction, $body );
+		}
 
-			'success' => true,
+		if ( '/' === $path ) {
+			return $this->success_response(
+    'Simulation mode is active. No external request was made.',
+    array(
+        'timestamp' => $timestamp,
+    ),
+    '',
+    'connected',
+    'simulation',
+    200
+);
+		}
 
-			'reference' => $reference,
-
-			'status' => 'cancelled',
-
-		);
-
+		$this->log( 'Simulation request intercepted: ' . strtoupper( $method ) . ' ' . $path );
+		return $this->success_response(
+    'Simulation mode is active. No external request was made.',
+    $transaction,
+    $transaction['id'],
+    $transaction['status'],
+    'simulation',
+    200
+);
 	}
 
 	/**
-	 * Synchronize provider status.
+	 * Create the standard response returned by every public client method.
 	 *
-	 * @param string $reference Provider reference.
-	 * @return array
+	 * @param bool                 $success       Whether the request succeeded.
+	 * @param string               $message       Human-readable result message.
+	 * @param array<string, mixed> $data          Response data.
+	 * @param string               $reference     Provider transaction reference.
+	 * @param string               $status        Provider transaction status.
+	 * @param string               $endpoint      Endpoint that handled the request.
+	 * @param int                  $response_code HTTP response code.
+	 * @return array<string, mixed> Normalized response.
 	 */
-	public function get_status(
-		$reference
-	) {
+	
 
-		error_log(
-			sprintf(
-				'FLIPNZEE ESCROW API: Synchronizing %s.',
-				$reference
-			)
-		);
+	/**
+	 * Get a useful error message for a failed HTTP response.
+	 *
+	 * @param int                  $response_code HTTP response code.
+	 * @param array<string, mixed> $data          Decoded response data.
+	 * @return string Error message.
+	 */
+	private function get_error_message( $response_code, $data ) {
+		if ( ! empty( $data['message'] ) && is_string( $data['message'] ) ) {
+			return $data['message'];
+		}
 
-		return array(
+		if ( ! empty( $data['error'] ) && is_string( $data['error'] ) ) {
+			return $data['error'];
+		}
 
-			'success' => true,
+		if ( 401 === (int) $response_code || 403 === (int) $response_code ) {
+			return 'Escrow API authentication failed. Please verify the configured credentials.';
+		}
 
-			'reference' => $reference,
-
-			'status' => 'created',
-
-			'updated_at' => current_time( 'mysql' ),
-
-		);
-
+		return sprintf( 'Escrow API request failed with HTTP response code %d.', (int) $response_code );
 	}
 
+	/**
+	 * Extract a provider transaction reference from an API response.
+	 *
+	 * @param array<string, mixed> $data Decoded API response.
+	 * @return string Provider transaction reference.
+	 */
+	private function extract_reference( $data ) {
+		foreach ( array( 'id', 'reference', 'transaction_id' ) as $key ) {
+			if ( isset( $data[ $key ] ) && is_scalar( $data[ $key ] ) ) {
+				return (string) $data[ $key ];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Extract a provider transaction status from an API response.
+	 *
+	 * @param array<string, mixed> $data Decoded API response.
+	 * @return string Provider transaction status.
+	 */
+	private function extract_status( $data ) {
+		return isset( $data['status'] ) && is_scalar( $data['status'] ) ? (string) $data['status'] : '';
+	}
+
+	/**
+	 * Extract a transaction reference from a transaction endpoint path.
+	 *
+	 * @param string $path API path.
+	 * @return string Transaction reference, if present.
+	 */
+	private function get_reference_from_path( $path ) {
+		if ( preg_match( '#^transaction/([^/]+)#', $path, $matches ) ) {
+			return rawurldecode( $matches[1] );
+		}
+
+		return '';
+	}
 }
