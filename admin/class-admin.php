@@ -81,6 +81,21 @@ add_submenu_page(
     )
 );
 
+/**
+ * Escrow Settings.
+ */
+add_submenu_page(
+	'flipnzee-auctions',
+	'Escrow Settings',
+	'Escrow Settings',
+	'manage_options',
+	'flipnzee-escrow-settings',
+	array(
+		'Flipnzee_Admin_Escrow_Settings',
+		'render_page',
+	)
+);
+
 add_submenu_page(
 	'flipnzee-auctions',
 	'Transaction Details',

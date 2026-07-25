@@ -62,6 +62,8 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'includes/class-database-migration.php
 	require_once FLIPNZEE_AUCTION_PATH . 'includes/class-database-migration.php';
 }
 
+
+
 /**
  * Load Activity Log Class
  */
@@ -78,6 +80,9 @@ if ( file_exists(
     require_once FLIPNZEE_AUCTION_PATH .
         'includes/class-auction-manager.php';
 }
+
+require_once FLIPNZEE_AUCTION_PATH .
+    'admin/class-admin-escrow-settings.php';
 
 error_log(
     'Auction Manager Class Exists? ' .
@@ -138,6 +143,21 @@ if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-admin-activity-log.php' )
  */
 if ( file_exists( FLIPNZEE_AUCTION_PATH . 'admin/class-admin.php' ) ) {
 	require_once FLIPNZEE_AUCTION_PATH . 'admin/class-admin.php';
+}
+
+/**
+ * Load Escrow Settings Admin Class
+ */
+if (
+	file_exists(
+		FLIPNZEE_AUCTION_PATH .
+		'admin/class-admin-escrow-settings.php'
+	)
+) {
+
+	require_once FLIPNZEE_AUCTION_PATH .
+		'admin/class-admin-escrow-settings.php';
+
 }
 
 /**
