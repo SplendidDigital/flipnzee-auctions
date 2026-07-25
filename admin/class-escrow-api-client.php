@@ -35,18 +35,41 @@ class Flipnzee_Escrow_API_Client {
 	 *
 	 * @var bool
 	 */
-	protected $sandbox = true;
+	/**
+ * Escrow settings.
+ *
+ * @var array
+ */
+protected $settings = array();
 
 	/**
-	 * Constructor.
-	 */
-	public function __construct() {
+ * Constructor.
+ */
+public function __construct() {
 
-		error_log(
-			'FLIPNZEE ESCROW API: Client initialized.'
-		);
+	$this->settings = get_option(
+		'flipnzee_escrow_settings',
+		array()
+	);
 
-	}
+	error_log(
+		'FLIPNZEE ESCROW API: Client initialized.'
+	);
+
+}
+
+/**
+ * Get current environment.
+ *
+ * @return string
+ */
+public function get_environment() {
+
+	return isset( $this->settings['environment'] )
+		? $this->settings['environment']
+		: 'simulation';
+
+}
 
 	/**
 	 * Get current endpoint.
@@ -55,11 +78,21 @@ class Flipnzee_Escrow_API_Client {
 	 */
 	public function get_endpoint() {
 
-		return $this->sandbox
-			? self::SANDBOX_URL
-			: self::LIVE_URL;
+	switch ( $this->get_environment() ) {
+
+		case 'production':
+			return self::LIVE_URL;
+
+		case 'sandbox':
+			return self::SANDBOX_URL;
+
+		case 'simulation':
+		default:
+			return 'Simulation';
 
 	}
+
+}
 
 	/**
 	 * Enable sandbox mode.
@@ -83,26 +116,7 @@ class Flipnzee_Escrow_API_Client {
 
 	}
 
-	/**
-	 * Test connection.
-	 *
-	 * @return array
-	 */
-	public function test_connection() {
-
-		error_log(
-			'FLIPNZEE ESCROW API: Testing connection.'
-		);
-
-		return array(
-			'success'  => true,
-			'mode'     => $this->sandbox ? 'sandbox' : 'live',
-			'endpoint' => $this->get_endpoint(),
-			'message'  => 'Simulation mode active.',
-		);
-
-	}
-
+	
 	/**
 	 * Create transaction.
 	 *
@@ -140,7 +154,36 @@ class Flipnzee_Escrow_API_Client {
 	 * @param string $reference Provider reference.
 	 * @return array
 	 */
-	public function get_transaction( $reference ) {
+
+
+/**
+ * Test the configured Escrow connection.
+ *
+ * @return array
+ */
+public function test_connection() {
+
+	$environment = $this->get_environment();
+
+	error_log(
+		sprintf(
+			'FLIPNZEE ESCROW API: Testing %s connection.',
+			$environment
+		)
+	);
+
+	return array(
+		'success'     => true,
+		'environment' => $environment,
+		'endpoint'    => $this->get_endpoint(),
+		'message'     => sprintf(
+			'%s connection simulated successfully.',
+			ucfirst( $environment )
+		),
+		'timestamp'   => current_time( 'mysql' ),
+	);
+
+}	public function get_transaction( $reference ) {
 
 		error_log(
 			sprintf(

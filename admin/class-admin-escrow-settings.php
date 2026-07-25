@@ -23,6 +23,9 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 
 	self::save_settings();
 
+	settings_errors( 'flipnzee_escrow' );
+
+
     $settings = self::get_settings();
 
 	?>
@@ -162,7 +165,7 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 
 					</td>
 
-				</tr>
+</tr>
 
 			</table>
 
@@ -173,6 +176,13 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 				'primary',
 				'flipnzee_save_escrow'
 			);
+
+			submit_button(
+	'Test Escrow Connection',
+	'secondary',
+	'flipnzee_test_connection',
+	false
+);
 
 			?>
 
@@ -189,20 +199,26 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 	 * @return void
 	 */
 	private static function save_settings() {
+if (
+	! isset( $_POST['flipnzee_save_escrow'] ) &&
+	! isset( $_POST['flipnzee_test_connection'] )
+) {
+	return;
+}
 
-		if (
-			! isset(
-				$_POST['flipnzee_save_escrow']
-			)
-		) {
-			return;
-		}
+check_admin_referer(
+	'flipnzee_save_escrow_settings',
+	'flipnzee_escrow_nonce'
+);
 
-		check_admin_referer(
-			'flipnzee_save_escrow_settings',
-			'flipnzee_escrow_nonce'
-		);
+if ( isset( $_POST['flipnzee_test_connection'] ) ) {
 
+	self::test_connection();
+
+	return;
+
+}
+		$existing = self::get_settings();
 		$settings = array(
 
 			'environment' => sanitize_text_field(
@@ -223,17 +239,18 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 				)
 			),
 
-			'production_email' => sanitize_email(
-				wp_unslash(
-					$_POST['production_email']
-				)
-			),
+		'production_email' => isset( $_POST['production_email'] )
+	? sanitize_email(
+		wp_unslash( $_POST['production_email'] )
+	)
+	: $existing['production_email'],
 
-			'production_api_key' => sanitize_text_field(
-				wp_unslash(
-					$_POST['production_api_key']
-				)
-			),
+'production_api_key' => isset( $_POST['production_api_key'] )
+	? sanitize_text_field(
+		wp_unslash( $_POST['production_api_key'] )
+	)
+	: $existing['production_api_key'],
+	
 
 			'debug' => isset(
 				$_POST['debug']
@@ -263,6 +280,43 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 		<?php
 	}
 
+		/**
+ * Test the Escrow API connection.
+ *
+ * @return void
+ */
+private static function test_connection() {
+	error_log(
+	'FLIPNZEE ESCROW SETTINGS: Test button clicked.'
+);
+
+	$client = new Flipnzee_Escrow_API_Client();
+
+	$result = $client->test_connection();
+
+	if ( ! empty( $result['success'] ) ) {
+
+		add_settings_error(
+			'flipnzee_escrow',
+			'connection_success',
+			esc_html( $result['message'] ),
+			'success'
+		);
+
+	} else {
+
+		add_settings_error(
+			'flipnzee_escrow',
+			'connection_error',
+			esc_html( $result['message'] ),
+			'error'
+		);
+
+	}
+
+}
+
+
 	/**
 	 * Default settings.
 	 *
@@ -285,10 +339,7 @@ private const OPTION_NAME = 'flipnzee_escrow_settings';
 
 				'sandbox_api_key' => '',
 
-				'production_email' => '',
-
-				'production_api_key' => '',
-
+			
 				'debug' => 1,
 
 			)
