@@ -25,6 +25,125 @@ class Flipnzee_External_Provider_Manager {
 	}
 
 	/**
+ * Create a provider transaction.
+ *
+ * Creates an external transaction using the configured
+ * payment provider and returns a standardized response.
+ *
+ * @param string $provider Provider slug.
+ * @param array  $transaction Transaction data.
+ *
+ * @return array
+ */
+public function create_transaction(
+	$provider,
+	array $transaction
+) {
+
+	$provider = strtolower(
+		sanitize_key( $provider )
+	);
+
+	switch ( $provider ) {
+
+		case 'escrow':
+
+			$client = new Flipnzee_Escrow_API_Client();
+
+$payload = $this->build_escrow_payload(
+	$transaction
+);
+
+$response = $client->create_transaction(
+	$payload
+);
+			if (
+				! is_array( $response )
+			) {
+
+				return array(
+					'success' => false,
+					'message' => __(
+						'Invalid response returned by Escrow API.',
+						'flipnzee-auctions'
+					),
+				);
+			}
+
+			return $response;
+
+		default:
+
+			return array(
+				'success' => false,
+				'message' => sprintf(
+					__(
+						'Unsupported payment provider: %s',
+						'flipnzee-auctions'
+					),
+					$provider
+				),
+			);
+	}
+}
+
+/**
+ * Build an Escrow transaction payload.
+ *
+ * Converts Flipnzee transaction data into the format
+ * expected by the Escrow API client.
+ *
+ * @param array $transaction Local transaction.
+ *
+ * @return array
+ */
+private function build_escrow_payload(
+	array $transaction
+) {
+
+	return array(
+
+		'title' => sprintf(
+			'Auction #%d',
+			absint(
+				$transaction['auction_id']
+			)
+		),
+
+		'description' => isset(
+			$transaction['description']
+		)
+			? $transaction['description']
+			: '',
+
+		'currency' => isset(
+			$transaction['currency']
+		)
+			? strtoupper(
+				$transaction['currency']
+			)
+			: 'USD',
+
+		'amount' => floatval(
+			$transaction['amount']
+		),
+
+		'buyer_email' => isset(
+			$transaction['buyer_email']
+		)
+			? $transaction['buyer_email']
+			: '',
+
+		'seller_email' => isset(
+			$transaction['seller_email']
+		)
+			? $transaction['seller_email']
+			: '',
+
+	);
+}
+
+	/**
 	 * Create an external provider record.
 	 *
 	 * @param array $data Provider data.

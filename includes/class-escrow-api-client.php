@@ -91,10 +91,48 @@ class Flipnzee_Escrow_API_Client {
 	 * @param array<string, mixed> $transaction_data Transaction payload.
 	 * @return array<string, mixed> Normalized API response.
 	 */
-	public function create_transaction( $transaction_data = array() ) {
-		return $this->send_request( 'POST', 'transaction', $transaction_data );
+	/**
+ * Create an Escrow transaction.
+ *
+ * @param array<string, mixed> $transaction_data Transaction payload.
+ * @return array<string, mixed> Normalized API response.
+ */
+public function create_transaction( $transaction_data = array() ) {
+
+	if ( empty( $transaction_data['amount'] ) ) {
+		return $this->build_response(
+			false,
+			'Transaction amount is required.',
+			array(),
+			'',
+			'',
+			'transaction',
+			0
+		);
 	}
 
+	if ( empty( $transaction_data['currency'] ) ) {
+		return $this->build_response(
+			false,
+			'Transaction currency is required.',
+			array(),
+			'',
+			'',
+			'transaction',
+			0
+		);
+	}
+
+	$this->log(
+		'Creating Escrow transaction.'
+	);
+
+	return $this->send_request(
+		'POST',
+		'transaction',
+		$transaction_data
+	);
+}
 	/**
 	 * Retrieve an Escrow transaction.
 	 *

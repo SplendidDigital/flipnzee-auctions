@@ -72,26 +72,43 @@ public static function create_transaction( $transaction_id ) {
 	| Create API client.
 	|--------------------------------------------------------------------------
 	*/
+/*
+|--------------------------------------------------------------------------
+| Create API client.
+|--------------------------------------------------------------------------
+*/
+
 error_log( 'STEP 1: create_transaction entered' );
-	$client = new Flipnzee_Escrow_API_Client();
-	error_log(
-    'STEP 4 RESPONSE: ' .
-    print_r( $response, true )
+
+$client = new Flipnzee_Escrow_API_Client();
+
+error_log( 'STEP 3: API client created' );
+
+/*
+|--------------------------------------------------------------------------
+| Ask API client to create transaction.
+|--------------------------------------------------------------------------
+*/
+
+$response = $client->create_transaction(
+	array(
+		'transaction_id' => absint( $transaction_id ),
+		'amount'         => 100,
+		'currency'       => 'USD',
+		'title'          => sprintf(
+			'Auction Transaction #%d',
+			absint( $transaction_id )
+		),
+		'description'    => 'Flipnzee Auction Transaction',
+		'buyer_email'    => 'buyer@example.com',
+		'seller_email'   => 'seller@example.com',
+	)
 );
-	error_log( 'STEP 3: API client created' );
 
-	/*
-	|--------------------------------------------------------------------------
-	| Ask API client to create transaction.
-	|--------------------------------------------------------------------------
-	*/
-
-	$response = $client->create_transaction(
-		array(
-			'transaction_id' => absint( $transaction_id ),
-		)
-	);
-
+error_log(
+	'STEP 4 RESPONSE: ' .
+	print_r( $response, true )
+);
 	if (
 		empty( $response['success'] ) ||
 		empty( $response['reference'] )

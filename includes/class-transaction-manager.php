@@ -154,6 +154,48 @@ error_log(
 	$transaction_id
 );
 
+/*
+|--------------------------------------------------------------------------
+| Create provider transaction (Lesson 131)
+|--------------------------------------------------------------------------
+*/
+
+$provider_manager = new Flipnzee_External_Provider_Manager();
+
+$buyer = get_userdata(
+	absint( $data['buyer_id'] )
+);
+
+$seller = get_userdata(
+	absint( $data['seller_id'] )
+);
+
+$provider_response = $provider_manager->create_transaction(
+	'escrow',
+	array(
+		'transaction_id' => $transaction_id,
+		'auction_id'     => $data['auction_id'],
+		'listing_id'     => $data['listing_id'],
+		'amount'         => $data['winning_bid'],
+		'currency'       => 'USD',
+		'buyer_email'    => $buyer
+			? $buyer->user_email
+			: '',
+		'seller_email'   => $seller
+			? $seller->user_email
+			: '',
+		'description'    => sprintf(
+			'Auction #%d',
+			absint( $data['auction_id'] )
+		),
+	)
+);
+
+error_log(
+	'FLIPNZEE: Escrow create_transaction() response: ' .
+	var_export( $provider_response, true )
+);
+
 $result = Flipnzee_Transfer_Manager::create_transfer(
     $transaction_id
 );
