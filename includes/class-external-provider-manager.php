@@ -36,57 +36,71 @@ class Flipnzee_External_Provider_Manager {
  * @return array
  */
 public function create_transaction(
-	$provider,
-	array $transaction
+	$transaction_data = array()
 ) {
 
-	$provider = strtolower(
-		sanitize_key( $provider )
+	$required = array(
+
+		'transaction_id',
+		'auction_id',
+		'listing_id',
+		'title',
+		'description',
+		'amount',
+		'currency',
+		'buyer_email',
+		'seller_email',
+
 	);
 
-	switch ( $provider ) {
+	foreach ( $required as $field ) {
 
-		case 'escrow':
+		if (
+			empty(
+				$transaction_data[ $field ]
+			)
+		) {
 
-			$client = new Flipnzee_Escrow_API_Client();
+			return $this->build_response(
 
-$payload = $this->build_escrow_payload(
-	$transaction
-);
+				false,
 
-$response = $client->create_transaction(
-	$payload
-);
-			if (
-				! is_array( $response )
-			) {
-
-				return array(
-					'success' => false,
-					'message' => __(
-						'Invalid response returned by Escrow API.',
-						'flipnzee-auctions'
-					),
-				);
-			}
-
-			return $response;
-
-		default:
-
-			return array(
-				'success' => false,
-				'message' => sprintf(
-					__(
-						'Unsupported payment provider: %s',
-						'flipnzee-auctions'
-					),
-					$provider
+				sprintf(
+					'Missing required field: %s',
+					$field
 				),
-			);
-	}
-}
 
+				array(),
+
+				'',
+
+				'',
+
+				'transaction',
+
+				0
+
+			);
+
+		}
+
+	}
+
+	$this->log(
+		'Creating Escrow transaction.'
+	);
+
+	return $this->send_request(
+
+		'POST',
+
+		'transaction',
+
+		$transaction_data
+
+	);
+
+}
 /**
  * Build an Escrow transaction payload.
  *
@@ -101,48 +115,87 @@ private function build_escrow_payload(
 	array $transaction
 ) {
 
-	return array(
+	$required = array(
 
-		'title' => sprintf(
-			'Auction #%d',
-			absint(
-				$transaction['auction_id']
-			)
-		),
-
-		'description' => isset(
-			$transaction['description']
-		)
-			? $transaction['description']
-			: '',
-
-		'currency' => isset(
-			$transaction['currency']
-		)
-			? strtoupper(
-				$transaction['currency']
-			)
-			: 'USD',
-
-		'amount' => floatval(
-			$transaction['amount']
-		),
-
-		'buyer_email' => isset(
-			$transaction['buyer_email']
-		)
-			? $transaction['buyer_email']
-			: '',
-
-		'seller_email' => isset(
-			$transaction['seller_email']
-		)
-			? $transaction['seller_email']
-			: '',
+		'transaction_id',
+		'auction_id',
+		'listing_id',
+		'amount',
+		'currency',
+		'buyer_email',
+		'seller_email',
+		'title',
+		'description',
 
 	);
-}
 
+	foreach ( $required as $field ) {
+
+		if (
+			! isset(
+				$transaction[ $field ]
+			)
+		) {
+
+			throw new Exception(
+				sprintf(
+					'Missing transaction payload field: %s',
+					$field
+				)
+			);
+
+		}
+	}
+
+	return array(
+
+		'transaction_id' =>
+			absint(
+				$transaction['transaction_id']
+			),
+
+		'auction_id' =>
+			absint(
+				$transaction['auction_id']
+			),
+
+		'listing_id' =>
+			absint(
+				$transaction['listing_id']
+			),
+
+		'title' =>
+			sanitize_text_field(
+				$transaction['title']
+			),
+
+		'description' =>
+			sanitize_textarea_field(
+				$transaction['description']
+			),
+
+		'currency' =>
+			strtoupper(
+				$transaction['currency']
+			),
+
+		'amount' =>
+			(float)
+			$transaction['amount'],
+
+		'buyer_email' =>
+			sanitize_email(
+				$transaction['buyer_email']
+			),
+
+		'seller_email' =>
+			sanitize_email(
+				$transaction['seller_email']
+			),
+
+	);
+
+}
 	/**
 	 * Create an external provider record.
 	 *

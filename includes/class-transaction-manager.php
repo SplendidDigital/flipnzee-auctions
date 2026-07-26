@@ -170,27 +170,68 @@ $seller = get_userdata(
 	absint( $data['seller_id'] )
 );
 
-$provider_response = $provider_manager->create_transaction(
-	'escrow',
-	array(
-		'transaction_id' => $transaction_id,
-		'auction_id'     => $data['auction_id'],
-		'listing_id'     => $data['listing_id'],
-		'amount'         => $data['winning_bid'],
-		'currency'       => 'USD',
-		'buyer_email'    => $buyer
-			? $buyer->user_email
-			: '',
-		'seller_email'   => $seller
-			? $seller->user_email
-			: '',
-		'description'    => sprintf(
-			'Auction #%d',
-			absint( $data['auction_id'] )
-		),
-	)
+/*
+|--------------------------------------------------------------------------
+| Lesson 132
+| Build canonical transaction payload
+|--------------------------------------------------------------------------
+*/
+
+$transaction_payload = array(
+
+	'transaction_id' => absint( $transaction_id ),
+
+	'auction_id' => absint(
+		$data['auction_id']
+	),
+
+	'listing_id' => absint(
+		$data['listing_id']
+	),
+
+	'amount' => (float)
+		$data['winning_bid'],
+
+	'currency' => 'USD',
+
+	'buyer_id' => absint(
+		$data['buyer_id']
+	),
+
+	'seller_id' => absint(
+		$data['seller_id']
+	),
+
+	'buyer_email' => $buyer
+		? $buyer->user_email
+		: '',
+
+	'seller_email' => $seller
+		? $seller->user_email
+		: '',
+
+	'title' => sprintf(
+		'Auction #%d',
+		absint(
+			$data['auction_id']
+		)
+	),
+
+	'description' => sprintf(
+		'Website auction transaction #%d',
+		absint(
+			$transaction_id
+		)
+	),
+
 );
 
+$provider_response =
+	$provider_manager->create_transaction(
+		'escrow',
+		$transaction_payload
+	);
+	
 error_log(
 	'FLIPNZEE: Escrow create_transaction() response: ' .
 	var_export( $provider_response, true )
