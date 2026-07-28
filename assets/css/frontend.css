@@ -103,36 +103,9 @@
     font-size: 18px;
     color: #005177;
 }
-.flipnzee-analytics-summary {
-    background: #f8fbff;
-    border: 1px solid #dbeafe;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px 0;
-}
 
-.flipnzee-verified {
-    font-weight: 700;
-    color: #1d4ed8;
-    margin-bottom: 12px;
-}
 
-.flipnzee-stat {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid #edf2f7;
-}
 
-.flipnzee-stat:last-child {
-    border-bottom: none;
-}
-
-.flipnzee-stat strong {
-    font-size: 18px;
-    color: #111827;
-}
 .flipnzee-countdown {
     font-weight: 600;
     color: #1d4ed8;
@@ -909,4 +882,24 @@
 
     margin-top: 20px;
 
+}
+
+.flipnzee-analytics-summary{
+    display:block !important;
+}
+
+.flipnzee-verified{
+    display:inline-flex !important;
+}
+
+.flipnzee-stat{
+    display:flex !important;
+    justify-content:space-between;
+    align-items:center;
+    clear:both;
+    width:100%;
+}
+
+.flipnzee-verified + .flipnzee-stat{
+    margin-top:15px;
 }

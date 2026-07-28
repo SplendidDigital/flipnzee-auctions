@@ -33,6 +33,7 @@ class Flipnzee_Transaction_Manager {
  * @return void
  */
 public function create_transaction_from_auction(
+	
 	$auction_id,
 	$winner
 ) {
@@ -94,6 +95,10 @@ if ( $transaction_id ) {
 }
 	public static function create_transaction( $data ) {
 
+	error_log(
+	'FLIPNZEE TX: create_transaction() entered.'
+);
+
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'flipnzee_transactions';
@@ -141,12 +146,33 @@ error_log(
     'FLIPNZEE: Transaction created with ID: ' . $transaction_id
 );
 
-Flipnzee_External_Provider_Manager::create_provider(
-	array(
-		'transaction_id' => $transaction_id,
-		'provider'       => 'escrow.com',
-		'status'         => 'pending',
-	)
+error_log(
+	'FLIPNZEE TX: Creating provider record.'
+);
+
+$provider_id =
+	Flipnzee_External_Provider_Manager::create_provider(
+		array(
+			'transaction_id' => $transaction_id,
+			'provider'       => 'escrow.com',
+			'status'         => 'pending',
+		)
+	);
+
+if ( ! $provider_id ) {
+
+	error_log(
+		'FLIPNZEE: Failed to create provider record.'
+	);
+
+	return $transaction_id;
+
+}
+
+error_log(
+	'FLIPNZEE: External provider #' .
+	$provider_id .
+	' created.'
 );
 
 error_log(
@@ -236,6 +262,13 @@ error_log(
 	'FLIPNZEE: Escrow create_transaction() response: ' .
 	var_export( $provider_response, true )
 );
+
+error_log(
+	'FLIPNZEE: Escrow create_transaction() response: ' .
+	var_export( $provider_response, true )
+);
+
+
 
 $result = Flipnzee_Transfer_Manager::create_transfer(
     $transaction_id

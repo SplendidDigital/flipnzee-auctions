@@ -36,173 +36,40 @@ class Flipnzee_External_Provider_Manager {
  * @return array
  */
 public function create_transaction(
-	$transaction_data = array()
+	$provider,
+	$transaction_payload
 ) {
 
-	$required = array(
+	switch ( strtolower( $provider ) ) {
 
-		'transaction_id',
-		'auction_id',
-		'listing_id',
-		'title',
-		'description',
-		'amount',
-		'currency',
-		'buyer_email',
-		'seller_email',
+		case 'escrow':
 
-	);
+			$client = new Flipnzee_Escrow_API_Client();
 
-	foreach ( $required as $field ) {
-
-		if (
-			empty(
-				$transaction_data[ $field ]
-			)
-		) {
-
-			return $this->build_response(
-
-				false,
-
-				sprintf(
-					'Missing required field: %s',
-					$field
-				),
-
-				array(),
-
-				'',
-
-				'',
-
-				'transaction',
-
-				0
-
+			return $client->create_transaction(
+				$transaction_payload
 			);
 
-		}
+		default:
 
-	}
-
-	$this->log(
-		'Creating Escrow transaction.'
-	);
-
-	return $this->send_request(
-
-		'POST',
-
-		'transaction',
-
-		$transaction_data
-
-	);
-
-}
-/**
- * Build an Escrow transaction payload.
- *
- * Converts Flipnzee transaction data into the format
- * expected by the Escrow API client.
- *
- * @param array $transaction Local transaction.
- *
- * @return array
- */
-private function build_escrow_payload(
-	array $transaction
-) {
-
-	$required = array(
-
-		'transaction_id',
-		'auction_id',
-		'listing_id',
-		'amount',
-		'currency',
-		'buyer_email',
-		'seller_email',
-		'title',
-		'description',
-
-	);
-
-	foreach ( $required as $field ) {
-
-		if (
-			! isset(
-				$transaction[ $field ]
-			)
-		) {
-
-			throw new Exception(
+			return new WP_Error(
+				'unknown_provider',
 				sprintf(
-					'Missing transaction payload field: %s',
-					$field
+					'Unknown provider: %s',
+					$provider
 				)
 			);
 
-		}
 	}
 
-	return array(
-
-		'transaction_id' =>
-			absint(
-				$transaction['transaction_id']
-			),
-
-		'auction_id' =>
-			absint(
-				$transaction['auction_id']
-			),
-
-		'listing_id' =>
-			absint(
-				$transaction['listing_id']
-			),
-
-		'title' =>
-			sanitize_text_field(
-				$transaction['title']
-			),
-
-		'description' =>
-			sanitize_textarea_field(
-				$transaction['description']
-			),
-
-		'currency' =>
-			strtoupper(
-				$transaction['currency']
-			),
-
-		'amount' =>
-			(float)
-			$transaction['amount'],
-
-		'buyer_email' =>
-			sanitize_email(
-				$transaction['buyer_email']
-			),
-
-		'seller_email' =>
-			sanitize_email(
-				$transaction['seller_email']
-			),
-
-	);
-
 }
-	/**
-	 * Create an external provider record.
-	 *
-	 * @param array $data Provider data.
-	 * @return int|false
-	 */
 
+/**
+ * Create an external provider record.
+ *
+ * @param array $data Provider data.
+ * @return int|false
+ */
 public static function create_provider( $data ) {
 
 	error_log(
@@ -226,8 +93,10 @@ public static function create_provider( $data ) {
 		'updated_at'         => current_time( 'mysql' ),
 	);
 
-	$data = wp_parse_args( $data, $defaults );
-	
+	$data = wp_parse_args(
+		$data,
+		$defaults
+	);
 
 	$result = $wpdb->insert(
 		$table,
@@ -269,6 +138,8 @@ public static function create_provider( $data ) {
 	return (int) $wpdb->insert_id;
 
 }
+
+
 /**
  * Get an external provider record by ID.
  *
@@ -352,13 +223,7 @@ public static function get_provider_by_transaction( $transaction_id ) {
 
 }
 
-	/**
-	 * Update provider status.
-	 *
-	 * @param int    $provider_id Provider ID.
-	 * @param string $status      New status.
-	 * @return bool
-	 */
+	
 	/**
  * Update the status of an external provider record.
  *
@@ -412,6 +277,74 @@ public static function update_provider_status(
 		' to status "' .
 		$status .
 		'".'
+	);
+
+	return true;
+
+}
+
+
+/**
+ * Update an external provider record.
+ *
+ * @param int   $provider_id Provider ID.
+ * @param array $data        Provider response data.
+ * @return bool
+ */
+public static function update_provider(
+	$provider_id,
+	$data
+) {
+
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'flipnzee_external_providers';
+
+	$result = $wpdb->update(
+		$table,
+		array(
+			'provider_reference' => sanitize_text_field(
+				$data['reference'] ?? ''
+			),
+			'provider_url' => esc_url_raw(
+				$data['endpoint'] ?? ''
+			),
+			'status' => sanitize_text_field(
+				$data['status'] ?? 'pending'
+			),
+			'updated_at' => current_time( 'mysql' ),
+		),
+		array(
+			'id' => absint( $provider_id ),
+		),
+		array(
+			'%s',
+			'%s',
+			'%s',
+			'%s',
+		),
+		array(
+			'%d',
+		)
+	);
+
+	if ( false === $result ) {
+
+		error_log(
+			'FLIPNZEE EXTERNAL PROVIDER: Failed to update provider #' .
+			$provider_id .
+			'. ' .
+			$wpdb->last_error
+		);
+
+		return false;
+
+	}
+
+	error_log(
+		'FLIPNZEE EXTERNAL PROVIDER: Provider #' .
+		$provider_id .
+		' synchronized successfully.'
 	);
 
 	return true;
